@@ -79,55 +79,143 @@ async function main() {
     (await prisma.industry.findMany()).map((i) => [i.slug, i.id]),
   );
 
-  const products = [
+  const FREQUENCY_BAND = {
+    name: "Frequency Band",
+    values: ["VHF (136-174 MHz)", "UHF (400-527 MHz)"],
+  };
+  const PROGRAMMING = {
+    name: "Programming",
+    values: ["Default Frequency", "Custom Frequency"],
+  };
+
+  type SeedOption = { name: string; values: string[] };
+  type SeedVariant = {
+    sku: string;
+    stock: number;
+    options: string[];
+    priceCadCents?: number;
+    priceUsdCents?: number;
+  };
+  type SeedReview = { author: string; content: string; rating: number };
+  type SeedProduct = {
+    name: string;
+    slug: string;
+    brand: string;
+    description: string;
+    shortDescription: string;
+    specifications: string;
+    images: string[];
+    status: "ACTIVE" | "DRAFT";
+    isNewArrival: boolean;
+    isBestSeller: boolean;
+    priceCadCents: number;
+    priceUsdCents: number;
+    saleCadCents?: number | null;
+    saleUsdCents?: number | null;
+    hasVariants: boolean;
+    categories: string[];
+    industries: string[];
+    options?: SeedOption[];
+    variants?: SeedVariant[];
+    reviews?: SeedReview[];
+  };
+
+  const products: SeedProduct[] = [
     {
-      name: "Motorola R7 Digital Two-Way Radio",
-      slug: "motorola-r7-digital-radio",
-      brand: "Motorola",
+      name: "Hytera HP782 Digital Two-Way Radio",
+      slug: "hytera-hp782-digital-radio",
+      brand: "Hytera",
       description:
-        "Professional-grade MOTOTRBO radio engineered for maximum audio clarity, resilience, and expandability. Ideal for security, manufacturing, and large campuses.",
-      shortDescription: "Advanced digital radio with superior audio clarity.",
-      images: ["/placeholder-product.svg"],
-      status: "ACTIVE" as const,
-      isNewArrival: true,
-      isBestSeller: true,
-      priceCadCents: 129900,
-      priceUsdCents: 99900,
-      saleCadCents: null,
-      saleUsdCents: null,
-      hasVariants: true,
-      categories: ["professional-radios"],
-      industries: ["security", "construction"],
-      options: [{ name: "Display", values: ["Non-Display", "With Display"] }],
-      variants: [
-        { sku: "R7-ND", stock: 25, options: ["Non-Display"] },
-        { sku: "R7-D", stock: 18, options: ["With Display"], priceCadCents: 139900, priceUsdCents: 107900 },
-      ],
-    },
-    {
-      name: "Motorola R5 Digital Two-Way Radio",
-      slug: "motorola-r5-digital-radio",
-      brand: "Motorola",
-      description:
-        "Reliable digital radio with excellent battery life and loud, clear audio for everyday business communication.",
-      shortDescription: "Reliable digital radio for everyday business use.",
+        "The Hytera HP782 is a flagship DMR Tier II/III professional radio engineered for maximum audio clarity, resilience, and expandability. With intelligent noise cancellation, Bluetooth, GPS, and a IP68 rugged body, it keeps mission-critical teams connected on the loudest, most demanding sites.\n\nWho it's for\nTeams in security, manufacturing, construction, and large campuses that need crystal-clear audio and dependable coverage shift after shift.\n\nKey features\n• Intelligent active noise cancellation for clear transmissions in loud environments\n• Built-in Bluetooth 5.1, GPS, and BeiDou positioning\n• IP68 dust- and water-proof rugged housing\n• Up to 1024 channels and large color display\n• Long-life Li-ion battery for full-shift operation\n\nChoose your frequency band (VHF or UHF) and programming option (default factory frequencies or custom frequencies programmed to your fleet) using the selectors above.",
+      shortDescription:
+        "Flagship DMR professional radio with noise cancellation, Bluetooth, GPS, and IP68 rugged build.",
+      specifications: [
+        "Model: Hytera HP782",
+        "Platform: Digital (DMR Tier II / III)",
+        "Channels: 1024",
+        "Frequency Band: VHF 136-174 MHz / UHF 400-527 MHz",
+        "Display: Color LCD",
+        "Audio Output: 2W loud, clear audio",
+        "Noise Cancellation: Intelligent active noise cancellation",
+        "Connectivity: Bluetooth 5.1, GPS, BeiDou",
+        "Ingress Protection: IP68 (dust & water proof)",
+        "Battery: 2400 mAh Li-ion (full-shift)",
+        "License Required: Yes — FCC / band dependent",
+      ].join("\n"),
       images: ["/placeholder-product.svg"],
       status: "ACTIVE" as const,
       isNewArrival: true,
       isBestSeller: true,
       priceCadCents: 89900,
-      priceUsdCents: 69900,
-      hasVariants: false,
-      categories: ["commercial-radios"],
-      industries: ["retail", "hospitality"],
+      priceUsdCents: 67900,
+      saleCadCents: null,
+      saleUsdCents: null,
+      hasVariants: true,
+      categories: ["professional-radios"],
+      industries: ["security", "construction"],
+      options: [FREQUENCY_BAND, PROGRAMMING],
+      variants: [
+        { sku: "HP782-VHF-DEF", stock: 24, options: ["VHF (136-174 MHz)", "Default Frequency"] },
+        { sku: "HP782-VHF-CUST", stock: 16, options: ["VHF (136-174 MHz)", "Custom Frequency"], priceCadCents: 94900, priceUsdCents: 71900 },
+        { sku: "HP782-UHF-DEF", stock: 30, options: ["UHF (400-527 MHz)", "Default Frequency"] },
+        { sku: "HP782-UHF-CUST", stock: 21, options: ["UHF (400-527 MHz)", "Custom Frequency"], priceCadCents: 94900, priceUsdCents: 71900 },
+      ],
+      reviews: [
+        { author: "Daniel R.", content: "Audio is incredibly clear even on our noisy plant floor. Custom programming arrived ready to go.", rating: 5 },
+        { author: "Site Safety Lead", content: "Rugged, reliable, and the battery easily lasts a full 12-hour shift. Highly recommend the UHF version.", rating: 5 },
+        { author: "Megan T.", content: "Great upgrade from our old analog fleet. The team programmed everything to match our channels perfectly.", rating: 4 },
+      ],
     },
     {
-      name: "Motorola TLK110 Nationwide Radio",
-      slug: "motorola-tlk110-radio",
-      brand: "Motorola",
+      name: "Hytera HP602 Digital Portable Radio",
+      slug: "hytera-hp602-digital-radio",
+      brand: "Hytera",
       description:
-        "Nationwide PoC LTE radio with instant PTT, centralized management, and zero range anxiety. Perfect for distributed teams.",
-      shortDescription: "Nationwide LTE PoC radio with unlimited range.",
+        "The Hytera HP602 delivers professional DMR performance in a compact, durable body. With clear audio, Bluetooth, and long battery life, it's an ideal everyday radio for commercial teams.\n\nSelect your frequency band (VHF or UHF) above to match your licensed spectrum.",
+      shortDescription: "Compact professional DMR radio with Bluetooth and long battery life.",
+      specifications: [
+        "Model: Hytera HP602",
+        "Platform: Digital (DMR Tier II)",
+        "Channels: 1024",
+        "Frequency Band: VHF 136-174 MHz / UHF 400-527 MHz",
+        "Display: Monochrome LCD",
+        "Connectivity: Bluetooth",
+        "Ingress Protection: IP67",
+        "Battery: 1950 mAh Li-ion",
+        "License Required: Yes — FCC / band dependent",
+      ].join("\n"),
+      images: ["/placeholder-product.svg"],
+      status: "ACTIVE" as const,
+      isNewArrival: true,
+      isBestSeller: true,
+      priceCadCents: 64900,
+      priceUsdCents: 49900,
+      hasVariants: true,
+      categories: ["commercial-radios"],
+      industries: ["retail", "hospitality"],
+      options: [FREQUENCY_BAND],
+      variants: [
+        { sku: "HP602-VHF", stock: 28, options: ["VHF (136-174 MHz)"] },
+        { sku: "HP602-UHF", stock: 35, options: ["UHF (400-527 MHz)"] },
+      ],
+    },
+    {
+      name: "Hytera PNC560 Nationwide PoC Radio",
+      slug: "hytera-pnc560-poc-radio",
+      brand: "Hytera",
+      description:
+        "The Hytera PNC560 is a 4G LTE + Wi-Fi push-to-talk over cellular (PoC) radio that delivers instant communication with unlimited nationwide range and zero range anxiety. A large touchscreen, Android platform, and centralized management make it perfect for distributed teams.",
+      shortDescription: "4G LTE + Wi-Fi PoC radio with unlimited nationwide range.",
+      specifications: [
+        "Model: Hytera PNC560",
+        "Platform: PoC (Push-to-talk over Cellular)",
+        "Network: 4G LTE / 3G / 2G / Wi-Fi",
+        "Operating System: Android",
+        "Display: 2.4\" color touchscreen",
+        "Positioning: GPS / GLONASS / BeiDou",
+        "Coverage: Nationwide (carrier dependent)",
+        "Battery: 3800 mAh Li-ion",
+      ].join("\n"),
       images: ["/placeholder-product.svg"],
       status: "ACTIVE" as const,
       isNewArrival: false,
@@ -141,12 +229,21 @@ async function main() {
       industries: ["construction", "security"],
     },
     {
-      name: "Motorola CLPe Business Radio",
-      slug: "motorola-clpe-business-radio",
-      brand: "Motorola",
+      name: "Hytera BD502i Business Radio",
+      slug: "hytera-bd502i-business-radio",
+      brand: "Hytera",
       description:
-        "Ultra-compact business radio designed for discreet, all-day communication in retail and hospitality environments.",
-      shortDescription: "Ultra-compact radio for retail and hospitality.",
+        "The Hytera BD502i is a lightweight, easy-to-use digital business radio designed for discreet, all-day communication in retail and hospitality environments. Analog/digital compatibility makes it a simple upgrade path.",
+      shortDescription: "Lightweight digital/analog business radio for retail and hospitality.",
+      specifications: [
+        "Model: Hytera BD502i",
+        "Platform: Digital/Analog (DMR Tier II)",
+        "Channels: 48",
+        "Frequency Band: UHF 400-470 MHz",
+        "Ingress Protection: IP54",
+        "Battery: 1500 mAh Li-ion",
+        "License Required: Yes — FCC",
+      ].join("\n"),
       images: ["/placeholder-product.svg"],
       status: "ACTIVE" as const,
       isNewArrival: false,
@@ -158,39 +255,51 @@ async function main() {
       industries: ["retail", "hospitality"],
     },
     {
-      name: "PMLN8077 Swivel Earpiece with PTT",
-      slug: "pmln8077-swivel-earpiece",
-      brand: "Motorola",
+      name: "Hytera SM16A1 Remote Speaker Microphone",
+      slug: "hytera-sm16a1-speaker-mic",
+      brand: "Hytera",
       description:
-        "Comfortable swivel earpiece with inline push-to-talk button. Compatible with a wide range of Motorola radios.",
-      shortDescription: "Swivel earpiece with inline PTT button.",
+        "Rugged IP67 remote speaker microphone with a large PTT button and 3.5mm audio jack. Compatible with Hytera HP and PD series radios for clear, hands-on communication.",
+      shortDescription: "IP67 remote speaker microphone with large PTT button.",
+      specifications: [
+        "Model: Hytera SM16A1",
+        "Type: Remote Speaker Microphone",
+        "Ingress Protection: IP67",
+        "Audio Jack: 3.5mm",
+        "Compatibility: Hytera HP / PD series",
+      ].join("\n"),
       images: ["/placeholder-product.svg"],
       status: "ACTIVE" as const,
       isNewArrival: false,
       isBestSeller: true,
-      priceCadCents: 3970,
-      priceUsdCents: 3000,
-      saleCadCents: 3000,
-      saleUsdCents: 2500,
+      priceCadCents: 7990,
+      priceUsdCents: 5900,
+      saleCadCents: 6490,
+      saleUsdCents: 4900,
       hasVariants: false,
       categories: ["accessories"],
       industries: ["security", "retail"],
     },
     {
-      name: "HALO Smart Sensor 3C",
-      slug: "halo-smart-sensor-3c",
-      brand: "HALO",
+      name: "Hytera ESW02 Wireless Bluetooth Earpiece",
+      slug: "hytera-esw02-wireless-earpiece",
+      brand: "Hytera",
       description:
-        "Enhanced air quality, security, and environmental monitoring for modern spaces. Integrates with your communication workflows.",
-      shortDescription: "Air quality and environmental monitoring sensor.",
+        "Discreet wireless Bluetooth earpiece with inline push-to-talk. Frees your team from cables while keeping communication private and clear.",
+      shortDescription: "Discreet wireless Bluetooth earpiece with inline PTT.",
+      specifications: [
+        "Model: Hytera ESW02",
+        "Type: Wireless Bluetooth Earpiece",
+        "Connectivity: Bluetooth",
+        "Battery: Rechargeable Li-ion",
+        "Compatibility: Bluetooth-enabled Hytera radios",
+      ].join("\n"),
       images: ["/placeholder-product.svg"],
       status: "ACTIVE" as const,
       isNewArrival: true,
       isBestSeller: false,
-      priceCadCents: 129500,
-      priceUsdCents: 119100,
-      saleCadCents: 119100,
-      saleUsdCents: 109500,
+      priceCadCents: 12900,
+      priceUsdCents: 9900,
       hasVariants: false,
       categories: ["accessories"],
       industries: ["healthcare", "schools"],
@@ -198,8 +307,14 @@ async function main() {
   ];
 
   for (const productData of products) {
-    const { categories: catSlugs, industries: indSlugs, options, variants, ...productFields } =
-      productData;
+    const {
+      categories: catSlugs,
+      industries: indSlugs,
+      options,
+      variants,
+      reviews: productReviews,
+      ...productFields
+    } = productData;
 
     const product = await prisma.product.upsert({
       where: { slug: productFields.slug },
@@ -228,40 +343,55 @@ async function main() {
       await prisma.productOption.deleteMany({ where: { productId: product.id } });
       await prisma.productVariant.deleteMany({ where: { productId: product.id } });
 
-      for (const option of options) {
+      const valueIdByName: Record<string, string> = {};
+      for (const [position, option] of options.entries()) {
         const createdOption = await prisma.productOption.create({
           data: {
             productId: product.id,
             name: option.name,
+            position,
             values: {
               create: option.values.map((value, index) => ({ value, position: index })),
             },
           },
           include: { values: true },
         });
+        for (const v of createdOption.values) valueIdByName[v.value] = v.id;
+      }
 
-        if (variants?.length) {
-          for (const variant of variants) {
-            const optionValue = createdOption.values.find((v) =>
-              variant.options.includes(v.value),
-            );
-            if (!optionValue) continue;
+      if (variants?.length) {
+        for (const variant of variants) {
+          const optionValueIds = variant.options
+            .map((name) => valueIdByName[name])
+            .filter((id): id is string => Boolean(id));
 
-            await prisma.productVariant.create({
-              data: {
-                productId: product.id,
-                sku: variant.sku,
-                stock: variant.stock,
-                priceCadCents: variant.priceCadCents ?? null,
-                priceUsdCents: variant.priceUsdCents ?? null,
-                options: {
-                  create: [{ optionValueId: optionValue.id }],
-                },
+          await prisma.productVariant.create({
+            data: {
+              productId: product.id,
+              sku: variant.sku,
+              stock: variant.stock,
+              priceCadCents: variant.priceCadCents ?? null,
+              priceUsdCents: variant.priceUsdCents ?? null,
+              options: {
+                create: optionValueIds.map((optionValueId) => ({ optionValueId })),
               },
-            });
-          }
+            },
+          });
         }
       }
+    }
+
+    await prisma.review.deleteMany({ where: { productId: product.id } });
+    if (productReviews?.length) {
+      await prisma.review.createMany({
+        data: productReviews.map((r) => ({
+          productId: product.id,
+          author: r.author,
+          content: r.content,
+          rating: r.rating,
+          featured: false,
+        })),
+      });
     }
   }
 

@@ -11,6 +11,7 @@ type ProductFormProps = {
     brand?: string | null;
     description: string;
     shortDescription?: string | null;
+    specifications?: string | null;
     images: string[];
     status: "ACTIVE" | "DRAFT";
     isNewArrival: boolean;
@@ -80,6 +81,18 @@ export async function ProductForm({ product }: ProductFormProps) {
           name="description"
           defaultValue={product?.description ?? ""}
           required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="specifications">
+          Specifications (one per line, format: Label: Value)
+        </Label>
+        <Textarea
+          id="specifications"
+          name="specifications"
+          placeholder={"Model: HP782\nPlatform: Digital (DMR)\nChannels: 1024\nBand: VHF 136-174 MHz / UHF 400-527 MHz"}
+          defaultValue={product?.specifications ?? ""}
         />
       </div>
 

@@ -75,6 +75,7 @@ model Product {
   brand            String?
   description      String        @db.Text
   shortDescription String?
+  specifications   String?       @db.Text
   images           String[]
   status           ProductStatus @default(DRAFT)
   isNewArrival     Boolean       @default(false)

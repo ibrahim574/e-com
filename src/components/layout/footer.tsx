@@ -9,7 +9,13 @@ import {
   CreditCard,
   Headphones,
 } from "lucide-react";
-import { SITE_EMAIL, SITE_NAME, SITE_PHONE } from "@/lib/constants";
+import {
+  SITE_EMAIL,
+  SITE_NAME,
+  SITE_PHONE,
+  PARENT_COMPANY,
+  PARENT_COMPANY_URL,
+} from "@/lib/constants";
 
 const socials = [
   {
@@ -39,16 +45,16 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-slate-950 text-slate-300">
+    <footer className="border-t border-slate-200 bg-slate-50 text-slate-600">
       {/* Trust strip */}
-      <div className="border-b border-white/10">
+      <div className="border-b border-slate-200 bg-white">
         <div className="container-page grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {trust.map((t) => (
             <div key={t.label} className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-white/5 text-red-400">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-red-50 text-red-600">
                 <t.icon className="h-5 w-5" />
               </span>
-              <span className="text-sm font-semibold text-white">{t.label}</span>
+              <span className="text-sm font-semibold text-slate-900">{t.label}</span>
             </div>
           ))}
         </div>
@@ -56,23 +62,35 @@ export function Footer() {
 
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <Link href="/" className="flex items-center gap-2 font-extrabold text-white">
+          <Link href="/" className="flex items-center gap-2 font-extrabold text-slate-900">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-600 text-white">
               <Radio className="h-6 w-6" />
             </span>
             <span className="text-lg">{SITE_NAME}</span>
           </Link>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-400">
+          <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-500">
             Expert two-way radio solutions with fast shipping, professional
             programming, and industry-ready kits — trusted by teams across the US
-            and Canada for over 25 years.
+            and Canada.
+          </p>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500">
+            A sister concern of{" "}
+            <a
+              href={PARENT_COMPANY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-red-600 hover:underline"
+            >
+              {PARENT_COMPANY}
+            </a>
+            .
           </p>
           <div className="mt-6 flex gap-3">
             {socials.map((s) => (
               <a
                 key={s.label}
                 href="#"
-                className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 text-slate-400 transition hover:bg-red-600 hover:text-white"
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition hover:bg-red-600 hover:text-white hover:ring-red-600"
                 aria-label={s.label}
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -84,62 +102,62 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">
             Shop
           </h4>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/categories/business-radios" className="transition hover:text-white">Business Radios</Link></li>
-            <li><Link href="/categories/commercial-radios" className="transition hover:text-white">Commercial Radios</Link></li>
-            <li><Link href="/categories/nationwide-radios" className="transition hover:text-white">Nationwide Radios</Link></li>
-            <li><Link href="/categories/accessories" className="transition hover:text-white">Accessories</Link></li>
-            <li><Link href="/search" className="transition hover:text-white">All Products</Link></li>
+            <li><Link href="/categories/business-radios" className="transition hover:text-red-600">Business Radios</Link></li>
+            <li><Link href="/categories/commercial-radios" className="transition hover:text-red-600">Commercial Radios</Link></li>
+            <li><Link href="/categories/nationwide-radios" className="transition hover:text-red-600">Nationwide Radios</Link></li>
+            <li><Link href="/categories/accessories" className="transition hover:text-red-600">Accessories</Link></li>
+            <li><Link href="/search" className="transition hover:text-red-600">All Products</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">
             Support
           </h4>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/contact" className="transition hover:text-white">Contact Us</Link></li>
-            <li><Link href="/shipping" className="transition hover:text-white">Shipping Policy</Link></li>
-            <li><Link href="/about" className="transition hover:text-white">About Us</Link></li>
-            <li><Link href="/account" className="transition hover:text-white">My Account</Link></li>
-            <li><Link href="/account/orders" className="transition hover:text-white">Order History</Link></li>
+            <li><Link href="/contact" className="transition hover:text-red-600">Contact Us</Link></li>
+            <li><Link href="/shipping" className="transition hover:text-red-600">Shipping Policy</Link></li>
+            <li><Link href="/about" className="transition hover:text-red-600">About Us</Link></li>
+            <li><Link href="/account" className="transition hover:text-red-600">My Account</Link></li>
+            <li><Link href="/account/orders" className="transition hover:text-red-600">Order History</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-white">
+          <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-900">
             Get in Touch
           </h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-red-400" />
-              <a href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`} className="transition hover:text-white">
+              <Phone className="h-4 w-4 text-red-600" />
+              <a href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`} className="transition hover:text-red-600">
                 {SITE_PHONE}
               </a>
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-red-400" />
-              <a href={`mailto:${SITE_EMAIL}`} className="transition hover:text-white">
+              <Mail className="h-4 w-4 text-red-600" />
+              <a href={`mailto:${SITE_EMAIL}`} className="transition hover:text-red-600">
                 {SITE_EMAIL}
               </a>
             </li>
             <li className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
               <span>Serving the US &amp; Canada nationwide</span>
             </li>
           </ul>
         </div>
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="border-t border-slate-200">
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-slate-500 sm:flex-row">
           <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/shipping" className="transition hover:text-white">Shipping</Link>
-            <Link href="/contact" className="transition hover:text-white">Contact</Link>
+            <Link href="/shipping" className="transition hover:text-red-600">Shipping</Link>
+            <Link href="/contact" className="transition hover:text-red-600">Contact</Link>
             <span>Powered by PayPal · CAD / USD</span>
           </div>
         </div>

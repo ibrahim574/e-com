@@ -51,27 +51,9 @@ export default async function ProductPage({
         product={product}
         options={product.options}
         variants={product.variants}
+        reviews={product.reviews}
         currency={currency}
       />
-
-      {product.reviews.length > 0 && (
-        <section className="mt-16 border-t border-slate-200 pt-10">
-          <h2 className="text-2xl font-bold text-slate-900">Customer Reviews</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {product.reviews.map((review) => (
-              <blockquote
-                key={review.id}
-                className="rounded-lg border border-slate-200 bg-slate-50 p-4"
-              >
-                <p className="text-slate-700">&ldquo;{review.content}&rdquo;</p>
-                <footer className="mt-2 text-sm font-semibold text-slate-900">
-                  — {review.author}
-                </footer>
-              </blockquote>
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }

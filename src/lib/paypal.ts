@@ -50,7 +50,7 @@ export async function createPayPalOrder(params: {
         },
       ],
       applicationContext: {
-        brandName: "Rapid Radio Gear",
+        brandName: "Hytera Radios",
         landingPage: OrderApplicationContextLandingPage.NoPreference,
         userAction: OrderApplicationContextUserAction.PayNow,
       },

@@ -1,7 +1,10 @@
-export const SITE_NAME = "Rapid Radio Gear";
-export const SITE_TAGLINE = "Nationwide Two-Way Radios & Accessories";
-export const SITE_PHONE = "1-800-555-RADIO";
-export const SITE_EMAIL = "support@rapidradiogear.com";
+export const SITE_NAME = "Hytera Radios";
+export const SITE_TAGLINE = "Professional Two-Way Radios & Communication Solutions";
+export const SITE_PHONE = "1-800-705-3189";
+export const SITE_EMAIL = "sales@hyteraradios.ca";
+
+export const PARENT_COMPANY = "WirelessCom.Ca";
+export const PARENT_COMPANY_URL = "https://www.wirelesscom.org/";
 
 export const SHIPPING_FLAT_RATE_CAD_CENTS = 1500;
 export const SHIPPING_FLAT_RATE_USD_CENTS = 1200;

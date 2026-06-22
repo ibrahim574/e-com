@@ -25,6 +25,7 @@ export async function saveProductAction(formData: FormData) {
   const brand = String(formData.get("brand") ?? "").trim() || null;
   const description = String(formData.get("description") ?? "").trim();
   const shortDescription = String(formData.get("shortDescription") ?? "").trim() || null;
+  const specifications = String(formData.get("specifications") ?? "").trim() || null;
   const images = String(formData.get("images") ?? "")
     .split("\n")
     .map((s) => s.trim())
@@ -52,6 +53,7 @@ export async function saveProductAction(formData: FormData) {
     brand,
     description,
     shortDescription,
+    specifications,
     images: images.length ? images : ["/placeholder-product.svg"],
     status,
     isNewArrival,

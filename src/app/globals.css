@@ -54,13 +54,29 @@ body {
   @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
 }
 
-/* Hero mesh background */
+/* Hero mesh background (dark) */
 .hero-mesh {
   background-color: #0b1220;
   background-image:
     radial-gradient(at 18% 20%, rgba(220, 38, 38, 0.45) 0px, transparent 55%),
     radial-gradient(at 82% 0%, rgba(56, 89, 168, 0.4) 0px, transparent 50%),
     radial-gradient(at 75% 85%, rgba(220, 38, 38, 0.25) 0px, transparent 50%);
+}
+
+/* Hero background (light) */
+.hero-light {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(at 12% 18%, rgba(220, 38, 38, 0.12) 0px, transparent 50%),
+    radial-gradient(at 88% 6%, rgba(59, 130, 246, 0.1) 0px, transparent 45%),
+    radial-gradient(at 78% 92%, rgba(220, 38, 38, 0.08) 0px, transparent 45%),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Subtle grid texture for light promo */
+.dot-grid {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 .text-balance {
