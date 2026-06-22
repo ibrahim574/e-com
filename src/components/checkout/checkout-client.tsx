@@ -179,7 +179,7 @@ export function CheckoutClient({
           ) : (
             <div ref={paypalRef} className="mt-4" />
           )}
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-blue-600">{error}</p>}
         </div>
       </form>
 

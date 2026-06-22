@@ -21,7 +21,7 @@ export default async function AccountPage() {
         </div>
         <Link
           href="/account/orders"
-          className="rounded-xl border border-slate-200 p-6 transition hover:border-red-200 hover:shadow-sm"
+          className="rounded-xl border border-slate-200 p-6 transition hover:border-blue-200 hover:shadow-sm"
         >
           <h2 className="font-bold text-slate-900">Order History</h2>
           <p className="mt-2 text-sm text-slate-600">View your past orders and statuses.</p>
@@ -29,10 +29,10 @@ export default async function AccountPage() {
         {session.user.role === "ADMIN" && (
           <Link
             href="/admin"
-            className="rounded-xl border border-red-200 bg-red-50 p-6 transition hover:shadow-sm"
+            className="rounded-xl border border-blue-200 bg-blue-50 p-6 transition hover:shadow-sm"
           >
-            <h2 className="font-bold text-red-700">Admin Panel</h2>
-            <p className="mt-2 text-sm text-red-600">Manage products and categories.</p>
+            <h2 className="font-bold text-blue-700">Admin Panel</h2>
+            <p className="mt-2 text-sm text-blue-600">Manage products and categories.</p>
           </Link>
         )}
       </div>

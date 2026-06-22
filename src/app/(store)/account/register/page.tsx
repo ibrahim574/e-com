@@ -31,14 +31,14 @@ export default function RegisterPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" required minLength={6} />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-blue-600">{error}</p>}
           <Button type="submit" className="w-full">
             Create Account
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-600">
           Already have an account?{" "}
-          <Link href="/account/login" className="font-semibold text-red-600">
+          <Link href="/account/login" className="font-semibold text-blue-600">
             Sign In
           </Link>
         </p>

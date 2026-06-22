@@ -51,7 +51,7 @@ export function Footer() {
         <div className="container-page grid gap-6 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {trust.map((t) => (
             <div key={t.label} className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-red-50 text-red-600">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-blue-600">
                 <t.icon className="h-5 w-5" />
               </span>
               <span className="text-sm font-semibold text-slate-900">{t.label}</span>
@@ -63,7 +63,7 @@ export function Footer() {
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Link href="/" className="flex items-center gap-2 font-extrabold text-slate-900">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-600 text-white">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white">
               <Radio className="h-6 w-6" />
             </span>
             <span className="text-lg">{SITE_NAME}</span>
@@ -79,7 +79,7 @@ export function Footer() {
               href={PARENT_COMPANY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-red-600 hover:underline"
+              className="font-semibold text-blue-600 hover:underline"
             >
               {PARENT_COMPANY}
             </a>
@@ -90,7 +90,7 @@ export function Footer() {
               <a
                 key={s.label}
                 href="#"
-                className="grid h-9 w-9 place-items-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition hover:bg-red-600 hover:text-white hover:ring-red-600"
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200 transition hover:bg-blue-600 hover:text-white hover:ring-blue-600"
                 aria-label={s.label}
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -106,11 +106,11 @@ export function Footer() {
             Shop
           </h4>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/categories/business-radios" className="transition hover:text-red-600">Business Radios</Link></li>
-            <li><Link href="/categories/commercial-radios" className="transition hover:text-red-600">Commercial Radios</Link></li>
-            <li><Link href="/categories/nationwide-radios" className="transition hover:text-red-600">Nationwide Radios</Link></li>
-            <li><Link href="/categories/accessories" className="transition hover:text-red-600">Accessories</Link></li>
-            <li><Link href="/search" className="transition hover:text-red-600">All Products</Link></li>
+            <li><Link href="/categories/business-radios" className="transition hover:text-blue-600">Business Radios</Link></li>
+            <li><Link href="/categories/commercial-radios" className="transition hover:text-blue-600">Commercial Radios</Link></li>
+            <li><Link href="/categories/nationwide-radios" className="transition hover:text-blue-600">Nationwide Radios</Link></li>
+            <li><Link href="/categories/accessories" className="transition hover:text-blue-600">Accessories</Link></li>
+            <li><Link href="/search" className="transition hover:text-blue-600">All Products</Link></li>
           </ul>
         </div>
 
@@ -119,11 +119,11 @@ export function Footer() {
             Support
           </h4>
           <ul className="space-y-3 text-sm">
-            <li><Link href="/contact" className="transition hover:text-red-600">Contact Us</Link></li>
-            <li><Link href="/shipping" className="transition hover:text-red-600">Shipping Policy</Link></li>
-            <li><Link href="/about" className="transition hover:text-red-600">About Us</Link></li>
-            <li><Link href="/account" className="transition hover:text-red-600">My Account</Link></li>
-            <li><Link href="/account/orders" className="transition hover:text-red-600">Order History</Link></li>
+            <li><Link href="/contact" className="transition hover:text-blue-600">Contact Us</Link></li>
+            <li><Link href="/shipping" className="transition hover:text-blue-600">Shipping Policy</Link></li>
+            <li><Link href="/about" className="transition hover:text-blue-600">About Us</Link></li>
+            <li><Link href="/account" className="transition hover:text-blue-600">My Account</Link></li>
+            <li><Link href="/account/orders" className="transition hover:text-blue-600">Order History</Link></li>
           </ul>
         </div>
 
@@ -133,19 +133,19 @@ export function Footer() {
           </h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-red-600" />
-              <a href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`} className="transition hover:text-red-600">
+              <Phone className="h-4 w-4 text-blue-600" />
+              <a href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`} className="transition hover:text-blue-600">
                 {SITE_PHONE}
               </a>
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-red-600" />
-              <a href={`mailto:${SITE_EMAIL}`} className="transition hover:text-red-600">
+              <Mail className="h-4 w-4 text-blue-600" />
+              <a href={`mailto:${SITE_EMAIL}`} className="transition hover:text-blue-600">
                 {SITE_EMAIL}
               </a>
             </li>
             <li className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
               <span>Serving the US &amp; Canada nationwide</span>
             </li>
           </ul>
@@ -156,8 +156,8 @@ export function Footer() {
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-slate-500 sm:flex-row">
           <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/shipping" className="transition hover:text-red-600">Shipping</Link>
-            <Link href="/contact" className="transition hover:text-red-600">Contact</Link>
+            <Link href="/shipping" className="transition hover:text-blue-600">Shipping</Link>
+            <Link href="/contact" className="transition hover:text-blue-600">Contact</Link>
             <span>Powered by PayPal · CAD / USD</span>
           </div>
         </div>

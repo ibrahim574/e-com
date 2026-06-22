@@ -161,7 +161,7 @@ export function ProductDetailClient({
               priority
             />
             {pricing.onSale && (
-              <span className="absolute left-4 top-4 rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+              <span className="absolute left-4 top-4 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
                 Sale
               </span>
             )}
@@ -174,7 +174,7 @@ export function ProductDetailClient({
                   onClick={() => setActiveImage(i)}
                   className={`relative h-20 w-20 overflow-hidden rounded-xl border bg-white transition ${
                     activeImage === i
-                      ? "border-red-500 ring-2 ring-red-100"
+                      ? "border-blue-500 ring-2 ring-blue-100"
                       : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
@@ -188,7 +188,7 @@ export function ProductDetailClient({
         {/* Buy box */}
         <div>
           {product.brand && (
-            <p className="text-sm font-bold uppercase tracking-wider text-red-600">
+            <p className="text-sm font-bold uppercase tracking-wider text-blue-600">
               {product.brand}
             </p>
           )}
@@ -226,7 +226,7 @@ export function ProductDetailClient({
                 <span className="pb-1 text-xl text-slate-400 line-through">
                   {formatPrice(pricing.priceCents, currency)}
                 </span>
-                <span className="mb-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600">
+                <span className="mb-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-600">
                   Save {formatPrice(pricing.priceCents - pricing.currentCents, currency)}
                 </span>
               </>
@@ -266,7 +266,7 @@ export function ProductDetailClient({
                         }
                         className={`rounded-lg border-2 px-4 py-2.5 text-sm font-semibold transition ${
                           active
-                            ? "border-red-600 bg-red-50 text-red-700"
+                            ? "border-blue-600 bg-blue-50 text-blue-700"
                             : "border-slate-200 text-slate-700 hover:border-slate-400"
                         }`}
                       >
@@ -310,7 +310,7 @@ export function ProductDetailClient({
               onClick={handleAddToCart}
               disabled={!canAdd || pending}
               className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-lg text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-slate-300 ${
-                added ? "bg-green-600" : "bg-red-600 hover:bg-red-700"
+                added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {added ? (
@@ -337,7 +337,7 @@ export function ProductDetailClient({
                   <Check className="h-4 w-4" /> In stock
                 </span>
               ) : (
-                <span className="ml-3 text-red-600">Out of stock</span>
+                <span className="ml-3 text-blue-600">Out of stock</span>
               )}
             </p>
           )}
@@ -350,7 +350,7 @@ export function ProductDetailClient({
               { icon: Headphones, label: "Expert Support" },
             ].map((t) => (
               <div key={t.label} className="flex flex-col items-center gap-1.5">
-                <t.icon className="h-5 w-5 text-red-600" />
+                <t.icon className="h-5 w-5 text-blue-600" />
                 <span className="text-xs font-medium text-slate-600">{t.label}</span>
               </div>
             ))}
@@ -369,7 +369,7 @@ export function ProductDetailClient({
                 onClick={() => setTab(t.key)}
                 className={`-mb-px border-b-2 px-5 py-3 text-sm font-bold transition ${
                   tab === t.key
-                    ? "border-red-600 text-red-600"
+                    ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-500 hover:text-slate-900"
                 }`}
               >

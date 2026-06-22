@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
           <Link
             key={stat.label}
             href={stat.href}
-            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-red-200"
+            className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-200"
           >
             <p className="text-sm text-slate-500">{stat.label}</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">{stat.value}</p>

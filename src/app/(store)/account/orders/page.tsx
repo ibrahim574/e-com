@@ -18,7 +18,7 @@ export default async function OrdersPage() {
     <div className="container-page py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="section-title">Order History</h1>
-        <Link href="/account" className="text-sm font-semibold text-red-600">
+        <Link href="/account" className="text-sm font-semibold text-blue-600">
           Back to Account
         </Link>
       </div>

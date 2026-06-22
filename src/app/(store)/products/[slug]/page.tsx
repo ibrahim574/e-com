@@ -36,11 +36,11 @@ export default async function ProductPage({
   return (
     <div className="container-page py-10">
       <nav className="mb-6 text-sm text-slate-500">
-        <Link href="/" className="hover:text-red-600">
+        <Link href="/" className="hover:text-blue-600">
           Home
         </Link>
         {" / "}
-        <Link href="/search" className="hover:text-red-600">
+        <Link href="/search" className="hover:text-blue-600">
           Products
         </Link>
         {" / "}

@@ -52,7 +52,7 @@ export function ProductCard({ product, currency }: ProductCardProps) {
             </span>
           )}
           {pricing.onSale && (
-            <span className="rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+            <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
               Save {formatPrice(savings, currency)}
             </span>
           )}
@@ -81,7 +81,7 @@ export function ProductCard({ product, currency }: ProductCardProps) {
         <div className="mt-3 flex items-end gap-2">
           {pricing.onSale ? (
             <>
-              <span className="text-xl font-extrabold text-red-600">
+              <span className="text-xl font-extrabold text-blue-600">
                 {formatPrice(pricing.currentCents, currency)}
               </span>
               <span className="pb-0.5 text-sm text-slate-400 line-through">

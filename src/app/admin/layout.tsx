@@ -20,21 +20,21 @@ export default async function AdminLayout({
                 Admin Panel
               </Link>
               <nav className="flex gap-4 text-sm">
-                <Link href="/admin/products" className="text-slate-600 hover:text-red-600">
+                <Link href="/admin/products" className="text-slate-600 hover:text-blue-600">
                   Products
                 </Link>
-                <Link href="/admin/categories" className="text-slate-600 hover:text-red-600">
+                <Link href="/admin/categories" className="text-slate-600 hover:text-blue-600">
                   Categories
                 </Link>
-                <Link href="/admin/industries" className="text-slate-600 hover:text-red-600">
+                <Link href="/admin/industries" className="text-slate-600 hover:text-blue-600">
                   Industries
                 </Link>
-                <Link href="/admin/orders" className="text-slate-600 hover:text-red-600">
+                <Link href="/admin/orders" className="text-slate-600 hover:text-blue-600">
                   Orders
                 </Link>
               </nav>
             </div>
-            <Link href="/" className="text-sm text-slate-600 hover:text-red-600">
+            <Link href="/" className="text-sm text-slate-600 hover:text-blue-600">
               View Store
             </Link>
           </div>

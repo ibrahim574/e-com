@@ -49,7 +49,7 @@ export function QuickAddButton({
       onClick={handleAdd}
       disabled={pending}
       className={`relative z-10 flex h-10 w-full items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white transition disabled:opacity-70 ${
-        added ? "bg-green-600" : "bg-red-600 hover:bg-red-700"
+        added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"
       }`}
     >
       {added ? (

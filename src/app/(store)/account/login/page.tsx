@@ -28,14 +28,14 @@ export default function LoginPage() {
             <Label htmlFor="password">Password</Label>
             <Input id="password" name="password" type="password" required />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-blue-600">{error}</p>}
           <Button type="submit" className="w-full">
             Sign In
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-600">
           Don&apos;t have an account?{" "}
-          <Link href="/account/register" className="font-semibold text-red-600">
+          <Link href="/account/register" className="font-semibold text-blue-600">
             Register
           </Link>
         </p>

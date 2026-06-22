@@ -62,11 +62,11 @@ export default async function HomePage() {
       <section className="hero-light relative overflow-hidden border-b border-slate-200">
         <div className="container-page relative grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24">
           <div className="animate-fade-up">
-            <span className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-red-600">
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-blue-600">
               <Zap className="h-3.5 w-3.5" /> Over 25 Years in Two-Way Radio
             </span>
             <h1 className="mt-5 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Two-Way Radios Built to <span className="text-red-600">Keep You Connected</span>
+              Two-Way Radios Built to <span className="text-blue-600">Keep You Connected</span>
             </h1>
             <p className="mt-5 max-w-lg text-lg leading-relaxed text-slate-600">
               Business, commercial, and nationwide PoC radios — with expert
@@ -99,21 +99,21 @@ export default async function HomePage() {
           <div className="animate-fade-up [animation-delay:120ms]">
             <div className="relative mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
                   <Star className="h-3 w-3 fill-current" /> Featured
                 </span>
                 <span className="text-xs font-medium text-slate-500">Nationwide PoC</span>
               </div>
               <div className="mt-6 grid place-items-center rounded-2xl bg-gradient-to-b from-slate-50 to-white py-10">
-                <Radio className="h-28 w-28 text-red-500" strokeWidth={1.2} />
+                <Radio className="h-28 w-28 text-blue-500" strokeWidth={1.2} />
               </div>
-              <h3 className="mt-6 text-xl font-bold text-slate-900">Hytera PNC560 PoC Radio</h3>
+              <h3 className="mt-6 text-xl font-bold text-slate-900">Hytera PDC680 Dual-Mode Radio</h3>
               <p className="mt-2 text-sm text-slate-600">
-                Instant push-to-talk over LTE with centralized management and zero
-                range anxiety.
+                All-in-one LTE &amp; DMR terminal with a 3.6&quot; touchscreen,
+                AI noise cancellation, and nationwide push-to-talk.
               </p>
               <Button className="mt-5 w-full" asChild>
-                <Link href="/products/hytera-pnc560-poc-radio">View Product</Link>
+                <Link href="/products/hytera-pdc680-dual-mode-radio">View Product</Link>
               </Button>
             </div>
           </div>
@@ -128,7 +128,7 @@ export default async function HomePage() {
               key={vp.title}
               className="flex items-start gap-4 bg-white px-2 py-8 lg:px-6"
             >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-red-50 text-red-600">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
                 <vp.icon className="h-5 w-5" />
               </span>
               <div>
@@ -151,7 +151,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/search"
-            className="group inline-flex items-center gap-1 text-sm font-semibold text-red-600"
+            className="group inline-flex items-center gap-1 text-sm font-semibold text-blue-600"
           >
             View all products
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -214,7 +214,7 @@ export default async function HomePage() {
       <section className="container-page pb-16 lg:pb-20">
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-8 py-14 shadow-sm lg:px-16">
           <div className="dot-grid absolute inset-0 opacity-70" />
-          <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-red-50 blur-2xl" />
+          <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-50 blur-2xl" />
           <div className="relative grid items-center gap-8 lg:grid-cols-2">
             <div>
               <p className="eyebrow">No-cost consultation</p>
@@ -279,9 +279,9 @@ export default async function HomePage() {
 
       {/* NEWSLETTER */}
       <section className="container-page py-16 lg:py-20">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-600 to-red-700 px-8 py-14 text-center text-white shadow-xl lg:px-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 px-8 py-14 text-center text-white shadow-xl lg:px-16">
           <h2 className="text-3xl font-extrabold sm:text-4xl">Stay Connected</h2>
-          <p className="mx-auto mt-3 max-w-xl text-red-100">
+          <p className="mx-auto mt-3 max-w-xl text-blue-100">
             Join our newsletter for product updates, deployment guides, and
             exclusive offers — straight to your inbox.
           </p>

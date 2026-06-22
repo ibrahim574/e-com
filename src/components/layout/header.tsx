@@ -79,7 +79,7 @@ export function Header({
           </button>
 
           <Link href="/" className="flex items-center gap-2 font-extrabold text-slate-900">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-600 text-white shadow-md shadow-red-600/30">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30">
               <Radio className="h-6 w-6" />
             </span>
             <span className="text-lg leading-tight tracking-tight sm:text-xl">
@@ -98,7 +98,7 @@ export function Header({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search radios, accessories, brands..."
-                className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-red-400 focus:bg-white focus:ring-2 focus:ring-red-100"
+                className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
               />
             </div>
           </form>
@@ -111,7 +111,7 @@ export function Header({
                   onClick={() => switchCurrency(c)}
                   className={`rounded-full px-2.5 py-1 text-xs font-bold transition ${
                     currency === c
-                      ? "bg-red-600 text-white shadow-sm"
+                      ? "bg-blue-600 text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-900"
                   }`}
                 >
@@ -134,7 +134,7 @@ export function Header({
             >
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <span className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-full bg-red-600 text-[10px] font-bold text-white ring-2 ring-white">
+                <span className="absolute right-0 top-0 grid h-5 w-5 place-items-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>
               )}
@@ -151,7 +151,7 @@ export function Header({
         <div className="container-page flex items-center gap-1">
           <Link
             href="/search"
-            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-red-600"
+            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-blue-600"
           >
             All Products
           </Link>
@@ -169,19 +169,19 @@ export function Header({
 
           <Link
             href="/about"
-            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-red-600"
+            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-blue-600"
           >
             About
           </Link>
           <Link
             href="/contact"
-            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-red-600"
+            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-blue-600"
           >
             Contact
           </Link>
           <Link
             href="/shipping"
-            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-red-600"
+            className="px-4 py-3 text-sm font-semibold text-slate-700 transition hover:text-blue-600"
           >
             Shipping
           </Link>
@@ -198,10 +198,10 @@ export function Header({
                   key={item.slug}
                   href={`/${openMenu}/${item.slug}`}
                   onClick={() => setOpenMenu(null)}
-                  className="group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-red-600"
+                  className="group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-blue-600"
                 >
                   {item.name}
-                  <ChevronDown className="h-4 w-4 -rotate-90 text-slate-300 transition group-hover:text-red-500" />
+                  <ChevronDown className="h-4 w-4 -rotate-90 text-slate-300 transition group-hover:text-blue-500" />
                 </Link>
               ))}
               {(openMenu === "categories" ? categories : industries).length ===
@@ -223,7 +223,7 @@ export function Header({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search products..."
-                className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-red-400 focus:bg-white"
+                className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-blue-400 focus:bg-white"
               />
             </form>
 
@@ -265,7 +265,7 @@ export function Header({
                     key={c}
                     onClick={() => switchCurrency(c)}
                     className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                      currency === c ? "bg-red-600 text-white" : "text-slate-500"
+                      currency === c ? "bg-blue-600 text-white" : "text-slate-500"
                     }`}
                   >
                     {c}
@@ -293,7 +293,7 @@ function MegaTrigger({
     <button
       onMouseEnter={onEnter}
       className={`flex items-center gap-1 px-4 py-3 text-sm font-semibold transition ${
-        active ? "text-red-600" : "text-slate-700 hover:text-red-600"
+        active ? "text-blue-600" : "text-slate-700 hover:text-blue-600"
       }`}
     >
       {label}
@@ -332,7 +332,7 @@ function MobileGroup({
               key={item.slug}
               href={`/${base}/${item.slug}`}
               onClick={onNavigate}
-              className="block rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-red-600"
+              className="block rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600"
             >
               {item.name}
             </Link>

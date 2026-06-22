@@ -18,7 +18,7 @@ export default function AboutPage() {
           <Link
             href={PARENT_COMPANY_URL}
             target="_blank"
-            className="font-semibold text-red-600 hover:underline"
+            className="font-semibold text-blue-600 hover:underline"
           >
             {PARENT_COMPANY}
           </Link>

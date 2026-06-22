@@ -3,8 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --primary: #dc2626;
-  --primary-dark: #b91c1c;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
   --primary-foreground: #ffffff;
   --muted: #f8fafc;
   --border: #e2e8f0;
@@ -43,7 +43,7 @@ body {
 }
 
 .eyebrow {
-  @apply text-xs font-bold uppercase tracking-[0.2em] text-red-600;
+  @apply text-xs font-bold uppercase tracking-[0.2em] text-blue-600;
 }
 
 .prose-store {
@@ -58,18 +58,18 @@ body {
 .hero-mesh {
   background-color: #0b1220;
   background-image:
-    radial-gradient(at 18% 20%, rgba(220, 38, 38, 0.45) 0px, transparent 55%),
-    radial-gradient(at 82% 0%, rgba(56, 89, 168, 0.4) 0px, transparent 50%),
-    radial-gradient(at 75% 85%, rgba(220, 38, 38, 0.25) 0px, transparent 50%);
+    radial-gradient(at 18% 20%, rgba(37, 99, 235, 0.5) 0px, transparent 55%),
+    radial-gradient(at 82% 0%, rgba(14, 165, 233, 0.4) 0px, transparent 50%),
+    radial-gradient(at 75% 85%, rgba(37, 99, 235, 0.25) 0px, transparent 50%);
 }
 
 /* Hero background (light) */
 .hero-light {
   background-color: #ffffff;
   background-image:
-    radial-gradient(at 12% 18%, rgba(220, 38, 38, 0.12) 0px, transparent 50%),
-    radial-gradient(at 88% 6%, rgba(59, 130, 246, 0.1) 0px, transparent 45%),
-    radial-gradient(at 78% 92%, rgba(220, 38, 38, 0.08) 0px, transparent 45%),
+    radial-gradient(at 12% 18%, rgba(37, 99, 235, 0.14) 0px, transparent 50%),
+    radial-gradient(at 88% 6%, rgba(14, 165, 233, 0.12) 0px, transparent 45%),
+    radial-gradient(at 78% 92%, rgba(37, 99, 235, 0.08) 0px, transparent 45%),
     linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 

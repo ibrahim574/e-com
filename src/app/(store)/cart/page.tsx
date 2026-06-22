@@ -56,7 +56,7 @@ export default async function CartPage() {
                 <div className="flex flex-1 flex-col">
                   <Link
                     href={`/products/${item.product.slug}`}
-                    className="font-semibold text-slate-900 hover:text-red-600"
+                    className="font-semibold text-slate-900 hover:text-blue-600"
                   >
                     {item.product.name}
                   </Link>

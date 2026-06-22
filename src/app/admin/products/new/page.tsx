@@ -10,7 +10,7 @@ export default async function NewProductPage() {
   return (
     <div>
       <div className="mb-6">
-        <Link href="/admin/products" className="text-sm text-red-600">
+        <Link href="/admin/products" className="text-sm text-blue-600">
           ← Back to products
         </Link>
         <h1 className="mt-2 text-3xl font-bold">Add Product</h1>
