@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { ProductForm } from "@/components/admin/product-form";
 
 export default async function NewProductPage() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/login");
+  await requireAdmin();
 
   return (
     <div>

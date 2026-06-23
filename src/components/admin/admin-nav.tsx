@@ -8,26 +8,45 @@ import {
   Layers,
   Building2,
   ShoppingCart,
+  Users,
+  ShieldCheck,
+  ClipboardList,
+  Settings,
 } from "lucide-react";
 
-const links = [
+const baseLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Layers },
   { href: "/admin/industries", label: "Industries", icon: Building2 },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
-];
+  { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/admins", label: "Admins", icon: ShieldCheck },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
+] as const;
 
-export function AdminNav() {
+export function AdminNav({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const pathname = usePathname();
 
+  const links = isSuperAdmin
+    ? [
+        ...baseLinks,
+        {
+          href: "/admin/audit",
+          label: "Audit",
+          icon: ClipboardList,
+        } as const,
+      ]
+    : baseLinks;
+
   return (
-    <nav className="flex gap-1 text-sm">
+    <nav className="flex flex-wrap gap-1 text-sm">
       {links.map((link) => {
         const Icon = link.icon;
-        const isActive = link.exact
-          ? pathname === link.href
-          : pathname.startsWith(link.href);
+        const isActive =
+          "exact" in link && link.exact
+            ? pathname === link.href
+            : pathname.startsWith(link.href);
         return (
           <Link
             key={link.href}

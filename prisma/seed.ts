@@ -55,10 +55,33 @@ async function main() {
   const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
+  // Ensure there is at least one SUPER_ADMIN. The seeded admin becomes the
+  // initial super admin if none exists yet; otherwise we don't touch the role.
+  const existingSuperAdmin = await prisma.user.findFirst({
+    where: { role: "SUPER_ADMIN" },
+    select: { id: true },
+  });
+  const seedRole: "ADMIN" | "SUPER_ADMIN" = existingSuperAdmin ? "ADMIN" : "SUPER_ADMIN";
+
   await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { passwordHash, role: "ADMIN" },
-    create: { email: adminEmail, name: "Store Admin", passwordHash, role: "ADMIN" },
+    update: { passwordHash },
+    create: { email: adminEmail, name: "Store Admin", passwordHash, role: seedRole },
+  });
+
+  // Ensure the seeded admin keeps SUPER_ADMIN privileges on fresh installs.
+  if (!existingSuperAdmin) {
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: { role: "SUPER_ADMIN" },
+    });
+  }
+
+  // Seed the site settings singleton if missing.
+  await prisma.siteSettings.upsert({
+    where: { id: "singleton" },
+    update: {},
+    create: { id: "singleton", dualCurrencyEnabled: true },
   });
 
   const categories = [

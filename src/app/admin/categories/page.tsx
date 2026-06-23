@@ -1,13 +1,11 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { saveCategoryAction, deleteCategoryAction } from "@/app/actions/admin";
 
 export default async function AdminCategoriesPage() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/login");
+  await requireAdmin();
 
   const categories = await prisma.category.findMany({ orderBy: { name: "asc" } });
 

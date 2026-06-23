@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   ShoppingCart,
   CreditCard,
@@ -15,7 +14,7 @@ import {
   PackageCheck,
   Truck,
 } from "lucide-react";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
@@ -29,10 +28,7 @@ import type { OrderStatus, Currency } from "@prisma/client";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    redirect("/admin/login");
-  }
+  const session = await requireAdmin();
 
   const [
     statusGroups,

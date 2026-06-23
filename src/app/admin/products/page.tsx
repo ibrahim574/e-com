@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { deleteProductAction } from "@/app/actions/admin";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export default async function AdminProductsPage() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/login");
+  await requireAdmin();
+  const { dualCurrencyEnabled } = await getSiteSettings();
 
   const products = await prisma.product.findMany({
     orderBy: { updatedAt: "desc" },
@@ -41,7 +41,7 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">CAD</th>
-              <th className="px-4 py-3">USD</th>
+              {dualCurrencyEnabled && <th className="px-4 py-3">USD</th>}
               <th className="px-4 py-3">Quantity</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
@@ -57,7 +57,9 @@ export default async function AdminProductsPage() {
                 </td>
                 <td className="px-4 py-3 capitalize">{product.status.toLowerCase()}</td>
                 <td className="px-4 py-3">{formatPrice(product.priceCadCents, "CAD")}</td>
-                <td className="px-4 py-3">{formatPrice(product.priceUsdCents, "USD")}</td>
+                {dualCurrencyEnabled && (
+                  <td className="px-4 py-3">{formatPrice(product.priceUsdCents, "USD")}</td>
+                )}
                 <td className="px-4 py-3">
                   <span
                     className={

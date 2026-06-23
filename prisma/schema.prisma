@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   CUSTOMER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum ProductStatus {
@@ -37,11 +38,19 @@ model User {
   passwordHash String
   name         String?
   role         UserRole @default(CUSTOMER)
+  phone        String?
+  addressLine1   String?
+  addressLine2   String?
+  addressCity    String?
+  addressState   String?
+  addressPostal  String?
+  addressCountry String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  cart   Cart?
-  orders Order[]
+  cart      Cart?
+  orders    Order[]
+  auditLogs AuditLog[]
 }
 
 model Category {
@@ -260,6 +269,29 @@ model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+model SiteSettings {
+  id                  String   @id @default("singleton")
+  dualCurrencyEnabled Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorId     String?
+  actorEmail  String
+  action      String
+  entityType  String
+  entityId    String?
+  summary     String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([createdAt])
 }
 
 model PendingRegistration {

@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import { getCart } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function StoreLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [cart, currency, categories, industries] = await Promise.all([
+  const [cart, currency, categories, industries, settings] = await Promise.all([
     getCart(),
     getCurrency(),
     prisma.category.findMany({
@@ -22,6 +23,7 @@ export default async function StoreLayout({
       orderBy: { name: "asc" },
       select: { name: true, slug: true },
     }),
+    getSiteSettings(),
   ]);
   const cartCount =
     cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
@@ -31,11 +33,12 @@ export default async function StoreLayout({
       <Header
         cartCount={cartCount}
         currency={currency}
+        dualCurrency={settings.dualCurrencyEnabled}
         categories={categories}
         industries={industries}
       />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer dualCurrency={settings.dualCurrencyEnabled} />
     </>
   );
 }

@@ -15,6 +15,10 @@ import {
   SITE_PHONE,
   PARENT_COMPANY,
   PARENT_COMPANY_URL,
+  SITE_ADDRESS_LINES,
+  SITE_MAP_EMBED_URL,
+  SITE_MAP_LINK_URL,
+  PAYMENT_METHODS,
 } from "@/lib/constants";
 
 const socials = [
@@ -36,7 +40,7 @@ const socials = [
   },
 ];
 
-export function Footer() {
+export function Footer({ dualCurrency = true }: { dualCurrency?: boolean } = {}) {
   const trust = [
     { icon: Truck, label: "Fast Free Shipping" },
     { icon: ShieldCheck, label: "1-Year Warranty" },
@@ -146,19 +150,42 @@ export function Footer() {
             </li>
             <li className="flex items-start gap-2">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-              <span>Serving the US &amp; Canada nationwide</span>
+              <a
+                href={SITE_MAP_LINK_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="leading-relaxed transition hover:text-blue-600"
+              >
+                {SITE_ADDRESS_LINES.map((line, i) => (
+                  <span key={i} className="block">
+                    {line}
+                  </span>
+                ))}
+              </a>
             </li>
           </ul>
+          <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 shadow-sm">
+            <iframe
+              title={`${SITE_NAME} location`}
+              src={SITE_MAP_EMBED_URL}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="h-40 w-full border-0"
+              allowFullScreen
+            />
+          </div>
         </div>
       </div>
 
       <div className="border-t border-slate-200">
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-slate-500 sm:flex-row">
           <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <Link href="/shipping" className="transition hover:text-blue-600">Shipping</Link>
             <Link href="/contact" className="transition hover:text-blue-600">Contact</Link>
-            <span>Powered by PayPal · CAD / USD</span>
+            <span>
+              We accept {PAYMENT_METHODS.join(", ")} · {dualCurrency ? "CAD / USD" : "CAD"}
+            </span>
           </div>
         </div>
       </div>

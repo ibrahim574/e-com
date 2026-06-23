@@ -25,6 +25,15 @@ declare global {
   }
 }
 
+type ShippingDefaults = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postal: string;
+  country: string;
+};
+
 type CheckoutClientProps = {
   currency: "CAD" | "USD";
   subtotalCents: number;
@@ -33,6 +42,7 @@ type CheckoutClientProps = {
   isLoggedIn: boolean;
   userEmail?: string | null;
   userName?: string | null;
+  shippingDefaults?: ShippingDefaults;
   paypalClientId: string;
 };
 
@@ -44,6 +54,7 @@ export function CheckoutClient({
   isLoggedIn,
   userEmail,
   userName,
+  shippingDefaults,
   paypalClientId,
 }: CheckoutClientProps) {
   const router = useRouter();
@@ -134,33 +145,59 @@ export function CheckoutClient({
         </div>
         <div>
           <Label htmlFor="shippingLine1">Address Line 1 *</Label>
-          <Input id="shippingLine1" name="shippingLine1" required />
+          <Input
+            id="shippingLine1"
+            name="shippingLine1"
+            defaultValue={shippingDefaults?.line1 ?? ""}
+            required
+          />
         </div>
         <div>
           <Label htmlFor="shippingLine2">Address Line 2</Label>
-          <Input id="shippingLine2" name="shippingLine2" />
+          <Input
+            id="shippingLine2"
+            name="shippingLine2"
+            defaultValue={shippingDefaults?.line2 ?? ""}
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="shippingCity">City *</Label>
-            <Input id="shippingCity" name="shippingCity" required />
+            <Input
+              id="shippingCity"
+              name="shippingCity"
+              defaultValue={shippingDefaults?.city ?? ""}
+              required
+            />
           </div>
           <div>
             <Label htmlFor="shippingState">State/Province *</Label>
-            <Input id="shippingState" name="shippingState" required />
+            <Input
+              id="shippingState"
+              name="shippingState"
+              defaultValue={shippingDefaults?.state ?? ""}
+              required
+            />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="shippingPostal">Postal Code *</Label>
-            <Input id="shippingPostal" name="shippingPostal" required />
+            <Input
+              id="shippingPostal"
+              name="shippingPostal"
+              defaultValue={shippingDefaults?.postal ?? ""}
+              required
+            />
           </div>
           <div>
             <Label htmlFor="shippingCountry">Country *</Label>
             <Input
               id="shippingCountry"
               name="shippingCountry"
-              defaultValue={currency === "CAD" ? "CA" : "US"}
+              defaultValue={
+                shippingDefaults?.country ?? (currency === "CAD" ? "CA" : "US")
+              }
               required
             />
           </div>

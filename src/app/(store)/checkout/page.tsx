@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { CheckoutClient } from "@/components/checkout/checkout-client";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getCart } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
@@ -25,6 +26,22 @@ export default async function CheckoutPage() {
   const shippingCents = getShippingCents(subtotalCents, currency);
   const totalCents = subtotalCents + shippingCents;
 
+  const profile = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          name: true,
+          phone: true,
+          addressLine1: true,
+          addressLine2: true,
+          addressCity: true,
+          addressState: true,
+          addressPostal: true,
+          addressCountry: true,
+        },
+      })
+    : null;
+
   return (
     <div className="container-page py-10">
       <h1 className="section-title">Checkout</h1>
@@ -37,6 +54,15 @@ export default async function CheckoutPage() {
           isLoggedIn={!!session?.user}
           userEmail={session?.user?.email}
           userName={session?.user?.name}
+          shippingDefaults={{
+            line1: profile?.addressLine1 ?? "",
+            line2: profile?.addressLine2 ?? "",
+            city: profile?.addressCity ?? "",
+            state: profile?.addressState ?? "",
+            postal: profile?.addressPostal ?? "",
+            country:
+              profile?.addressCountry ?? (currency === "CAD" ? "CA" : "US"),
+          }}
           paypalClientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? ""}
         />
       </div>

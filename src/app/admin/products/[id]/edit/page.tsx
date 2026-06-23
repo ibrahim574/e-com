@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { notFound } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/product-form";
 import { VariantManager } from "@/components/admin/variant-manager";
@@ -12,8 +12,7 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/login");
+  await requireAdmin();
 
   const { id } = await params;
   const { saved } = await searchParams;

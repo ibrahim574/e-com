@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
@@ -19,8 +18,7 @@ export default async function AdminOrdersPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/admin/login");
+  await requireAdmin();
 
   const { status } = await searchParams;
   const activeStatus = isOrderStatus(status) ? status : null;

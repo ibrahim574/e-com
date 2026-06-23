@@ -3,9 +3,11 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
+type AppUserRole = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
+
 declare module "next-auth" {
   interface User {
-    role: "CUSTOMER" | "ADMIN";
+    role: AppUserRole;
   }
 
   interface Session {
@@ -13,7 +15,7 @@ declare module "next-auth" {
       id: string;
       email: string;
       name?: string | null;
-      role: "CUSTOMER" | "ADMIN";
+      role: AppUserRole;
     };
   }
 }
@@ -21,7 +23,7 @@ declare module "next-auth" {
 declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
-    role: "CUSTOMER" | "ADMIN";
+    role: AppUserRole;
   }
 }
 

@@ -21,11 +21,13 @@ type NavItem = { name: string; slug: string };
 export function Header({
   cartCount = 0,
   currency,
+  dualCurrency = true,
   categories = [],
   industries = [],
 }: {
   cartCount?: number;
   currency: "CAD" | "USD";
+  dualCurrency?: boolean;
   categories?: NavItem[];
   industries?: NavItem[];
 }) {
@@ -145,21 +147,23 @@ export function Header({
           </form>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <div className="hidden items-center rounded-full border border-slate-200 bg-slate-50 p-0.5 sm:flex">
-              {(["CAD", "USD"] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => switchCurrency(c)}
-                  className={`rounded-full px-2.5 py-1 text-xs font-bold transition ${
-                    currency === c
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-900"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
+            {dualCurrency ? (
+              <div className="hidden items-center rounded-full border border-slate-200 bg-slate-50 p-0.5 sm:flex">
+                {(["CAD", "USD"] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => switchCurrency(c)}
+                    className={`rounded-full px-2.5 py-1 text-xs font-bold transition ${
+                      currency === c
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-900"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
             <Link
               href="/account"
@@ -309,22 +313,24 @@ export function Header({
               </Link>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <span className="text-sm font-medium text-slate-600">Currency</span>
-              <div className="flex items-center rounded-full border border-slate-200 bg-white p-0.5">
-                {(["CAD", "USD"] as const).map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => switchCurrency(c)}
-                    className={`rounded-full px-3 py-1 text-xs font-bold transition ${
-                      currency === c ? "bg-blue-600 text-white" : "text-slate-500"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+            {dualCurrency ? (
+              <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+                <span className="text-sm font-medium text-slate-600">Currency</span>
+                <div className="flex items-center rounded-full border border-slate-200 bg-white p-0.5">
+                  {(["CAD", "USD"] as const).map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => switchCurrency(c)}
+                      className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                        currency === c ? "bg-blue-600 text-white" : "text-slate-500"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </div>
       )}
