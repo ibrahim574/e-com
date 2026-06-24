@@ -1,8 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 import PDFDocument from "pdfkit";
-import type { Order, OrderItem } from "@prisma/client";
+import { formatItemDisplayName } from "@/lib/order-item-frequency";
 import type { InvoiceSettingsData } from "./invoice-settings";
+import type { Order, OrderItem } from "@prisma/client";
 
 type OrderWithItems = Order & { items: OrderItem[] };
 
@@ -79,10 +80,8 @@ export async function generateInvoicePdf(
 
   let y = tableTop + 24;
   for (const item of order.items) {
-    const name = item.variantLabel
-      ? `${item.productName} (${item.variantLabel})`
-      : item.productName;
-    doc.fillColor("#334155").text(name.slice(0, 45), 50, y, { width: 260 });
+    const name = formatItemDisplayName(item).slice(0, 60);
+    doc.fillColor("#334155").text(name, 50, y, { width: 260 });
     doc.text(String(item.quantity), 320, y);
     doc.text(formatMoney(item.unitPriceCents, order.currency), 370, y);
     doc.text(formatMoney(item.unitPriceCents * item.quantity, order.currency), 470, y);

@@ -18,6 +18,7 @@ import {
   Wallet,
   RotateCcw,
   FileBarChart,
+  MessageSquare,
 } from "lucide-react";
 
 const baseLinks = [
@@ -27,11 +28,13 @@ const baseLinks = [
   { href: "/admin/categories", label: "Categories", icon: Layers },
   { href: "/admin/industries", label: "Industries", icon: Building2 },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/leads", label: "Leads", icon: MessageSquare },
   { href: "/admin/accounting/ledger", label: "Ledger", icon: BookOpen },
   { href: "/admin/accounting/expenses", label: "Expenses", icon: Receipt },
   { href: "/admin/accounting/refunds", label: "Refunds", icon: RotateCcw },
   { href: "/admin/accounting/payments", label: "Payments", icon: Wallet },
   { href: "/admin/accounting/reports", label: "Reports", icon: FileBarChart },
+  { href: "/admin/accounting/pnl", label: "P&L", icon: FileBarChart },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/admins", label: "Admins", icon: ShieldCheck },
   { href: "/admin/settings", label: "Settings", icon: Settings },

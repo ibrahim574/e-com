@@ -11,6 +11,28 @@
   --ink: #0b1220;
 }
 
+.dark {
+  --background: #020617;
+  --foreground: #f1f5f9;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --muted: #0f172a;
+  --border: #1e293b;
+  --ink: #f8fafc;
+}
+
+.dark .section-title {
+  @apply text-slate-100;
+}
+
+.dark .card-surface {
+  @apply border-slate-800 bg-slate-900;
+}
+
+.dark .prose-store {
+  @apply text-slate-400;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

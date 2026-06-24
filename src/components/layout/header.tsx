@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { SITE_NAME, SITE_PHONE } from "@/lib/constants";
 import { setCurrencyAction } from "@/app/actions/currency";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type NavItem = { name: string; slug: string };
 
@@ -24,12 +25,16 @@ export function Header({
   dualCurrency = true,
   categories = [],
   industries = [],
+  announcementText,
+  announcementEnabled = true,
 }: {
   cartCount?: number;
   currency: "CAD" | "USD";
   dualCurrency?: boolean;
   categories?: NavItem[];
   industries?: NavItem[];
+  announcementText?: string;
+  announcementEnabled?: boolean;
 }) {
   const router = useRouter();
   const [openMenu, setOpenMenu] = useState<"categories" | "industries" | null>(
@@ -91,24 +96,25 @@ export function Header({
     setMobileOpen(false);
   }
 
+  const showAnnouncement =
+    announcementEnabled && Boolean(announcementText?.trim());
+
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Announcement bar */}
-      <div className="bg-slate-900 text-white">
-        <div className="container-page flex h-9 items-center justify-between text-xs font-medium sm:text-[13px]">
-          <p className="tracking-wide">
-            Free Shipping on Qualifying Orders &middot; No Monthly Fees &middot;
-            Expert US &amp; CA Support
-          </p>
-          <a
-            href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`}
-            className="hidden items-center gap-1.5 text-slate-200 transition hover:text-white sm:flex"
-          >
-            <Phone className="h-3.5 w-3.5" />
-            {SITE_PHONE}
-          </a>
+    <header className="sticky top-0 z-50 bg-white shadow-sm dark:bg-slate-900 dark:shadow-slate-950/50">
+      {showAnnouncement && (
+        <div className="bg-slate-900 text-white">
+          <div className="container-page flex h-9 items-center justify-between text-xs font-medium sm:text-[13px]">
+            <p className="tracking-wide">{announcementText}</p>
+            <a
+              href={`tel:${SITE_PHONE.replace(/[^\d+]/g, "")}`}
+              className="hidden items-center gap-1.5 text-slate-200 transition hover:text-white sm:flex"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              {SITE_PHONE}
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main bar */}
       <div className="border-b border-slate-200">
@@ -164,6 +170,8 @@ export function Header({
                 ))}
               </div>
             ) : null}
+
+            <ThemeToggle />
 
             <Link
               href="/account"

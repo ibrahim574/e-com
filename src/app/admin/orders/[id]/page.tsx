@@ -7,6 +7,7 @@ import { ORDER_STATUS_LIST, ORDER_STATUS_META } from "@/lib/order-status";
 import { OrderEditor } from "@/components/admin/order-editor";
 import { InvoiceActions } from "@/components/admin/invoice-actions";
 import { RefundForm } from "@/components/admin/refund-form";
+import { getShipmentBreakdown } from "@/lib/shipping";
 
 export const dynamic = "force-dynamic";
 
@@ -21,13 +22,20 @@ export default async function AdminOrderDetailPage({
   const order = await prisma.order.findFirst({
     where: { id, deletedAt: null },
     include: {
-      items: true,
+      items: {
+        include: {
+          product: { include: { shippingClass: true } },
+          variant: { include: { shippingClass: true } },
+        },
+      },
       user: true,
       invoices: { orderBy: { version: "desc" }, take: 1 },
     },
   });
 
   if (!order) notFound();
+
+  const shipment = await getShipmentBreakdown(order);
 
   const latestInvoice = order.invoices[0];
 
@@ -66,6 +74,42 @@ export default async function AdminOrderDetailPage({
       )}
 
       <OrderEditor order={order} statuses={ORDER_STATUS_LIST} />
+
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm">
+        <h2 className="font-bold text-slate-900">Shipment</h2>
+        <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+          <div>
+            <dt className="text-slate-500">Destination</dt>
+            <dd className="font-medium">{shipment.destination}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Zone</dt>
+            <dd className="font-medium">{shipment.zoneName ?? "Country flat rate"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Total weight</dt>
+            <dd className="font-medium">{(shipment.totalWeightGrams / 1000).toFixed(2)} kg</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Shipping class</dt>
+            <dd className="font-medium">{shipment.shippingClassSummary}</dd>
+          </div>
+        </dl>
+        <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+          {order.items.map((item) => {
+            const src = item.variant ?? item.product;
+            return (
+              <li key={item.id} className="flex justify-between gap-4 text-xs text-slate-600">
+                <span>
+                  {item.productName} × {item.quantity}
+                  {src?.weightGrams ? ` · ${src.weightGrams}g each` : ""}
+                </span>
+                <span>{src?.shippingClass?.name ?? "Standard"}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm">
         <h2 className="font-bold text-slate-900">Totals</h2>

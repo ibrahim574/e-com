@@ -7,6 +7,9 @@ import { prisma } from "@/lib/prisma";
 import { signIn } from "@/lib/auth";
 import { mergeGuestCart } from "@/lib/cart";
 import { sendOtpEmail } from "@/lib/email";
+import { isLoginLocked, recordLoginAttempt } from "@/lib/login-lockout";
+import { getRequestIp } from "@/lib/request-ip";
+import { validatePassword } from "@/lib/password-policy";
 import {
   compareOtp,
   generateOtp,
@@ -28,8 +31,9 @@ export async function startRegistrationAction(formData: FormData) {
     return { error: "Please enter a valid email address." };
   }
 
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
+  const pwCheck = validatePassword(password);
+  if (!pwCheck.valid) {
+    return { error: pwCheck.errors.join(" ") };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -181,6 +185,11 @@ export async function loginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const password = String(formData.get("password") ?? "");
   const callbackUrl = String(formData.get("callbackUrl") ?? "/account");
+  const ip = (await getRequestIp()) ?? "unknown";
+
+  if (await isLoginLocked(email, ip)) {
+    return { error: "Too many failed attempts. Please try again in 15 minutes." };
+  }
 
   try {
     await signIn("credentials", {
@@ -189,14 +198,17 @@ export async function loginAction(formData: FormData) {
       redirect: false,
     });
   } catch {
+    await recordLoginAttempt(email, ip, false);
     return { error: "Invalid email or password." };
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
+    await recordLoginAttempt(email, ip, false);
     return { error: "Invalid email or password." };
   }
 
+  await recordLoginAttempt(email, ip, true);
   await mergeGuestCart(user.id);
 
   redirect(callbackUrl);

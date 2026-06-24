@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
+import { formatItemDisplayName } from "@/lib/order-item-frequency";
 
 export default async function OrderDetailPage({
   params,
@@ -75,10 +76,7 @@ export default async function OrderDetailPage({
           <tbody>
             {order.items.map((item) => (
               <tr key={item.id} className="border-b border-slate-100">
-                <td className="py-2">
-                  {item.productName}
-                  {item.variantLabel ? ` (${item.variantLabel})` : ""}
-                </td>
+                <td className="py-2">{formatItemDisplayName(item)}</td>
                 <td className="py-2">{item.quantity}</td>
                 <td className="py-2 text-right">
                   {formatPrice(item.unitPriceCents * item.quantity, order.currency)}

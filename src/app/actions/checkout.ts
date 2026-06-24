@@ -54,6 +54,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     unitPriceCents: number;
     txFrequency: string | null;
     rxFrequency: string | null;
+    selectedFrequency: string | null;
   }> = [];
 
   for (const item of cart.items) {
@@ -75,6 +76,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
     }
 
     subtotalCents += pricing.currentCents * item.quantity;
+    const isCustomFreq = Boolean(item.rxFrequency?.trim());
     orderItems.push({
       productId: item.productId,
       variantId: item.variantId,
@@ -83,15 +85,28 @@ export async function createCheckoutOrderAction(formData: FormData) {
       sku: item.variant?.sku ?? null,
       quantity: item.quantity,
       unitPriceCents: pricing.currentCents,
-      txFrequency: item.txFrequency || null,
-      rxFrequency: item.rxFrequency || null,
+      txFrequency: isCustomFreq ? item.txFrequency || null : null,
+      rxFrequency: isCustomFreq ? item.rxFrequency || null : null,
+      selectedFrequency: !isCustomFreq && item.txFrequency ? item.txFrequency : null,
     });
   }
+
+  const shippingLineItems = cart.items.map((item) => {
+    const src = item.variant ?? item.product;
+    return {
+      quantity: item.quantity,
+      weightGrams: src.weightGrams,
+      shippingEnabled: src.shippingEnabled,
+      shippingClassSurchargeCents: src.shippingClass?.surchargeCents ?? 0,
+    };
+  });
 
   const shippingCents = await getShippingCentsForCountry(
     subtotalCents,
     shippingCountry,
     currency,
+    shippingState,
+    shippingLineItems,
   );
   const taxRules = await resolveTaxRules(shippingCountry, shippingState);
   const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);

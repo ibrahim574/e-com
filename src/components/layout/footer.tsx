@@ -41,7 +41,13 @@ const socials = [
   },
 ];
 
-export function Footer({ dualCurrency = true }: { dualCurrency?: boolean } = {}) {
+export function Footer({
+  dualCurrency = true,
+  proudlyCanadianEnabled = true,
+}: {
+  dualCurrency?: boolean;
+  proudlyCanadianEnabled?: boolean;
+} = {}) {
   const trust = [
     { icon: Truck, label: "Fast Free Shipping" },
     { icon: ShieldCheck, label: "1-Year Warranty" },
@@ -206,9 +212,11 @@ export function Footer({ dualCurrency = true }: { dualCurrency?: boolean } = {})
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-slate-500 sm:flex-row">
           <div className="flex flex-wrap items-center gap-3">
             <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-red-100">
-              <span aria-hidden>🍁</span> Proudly Canadian
-            </span>
+            {proudlyCanadianEnabled && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-red-100">
+                <span aria-hidden>🍁</span> Proudly Canadian
+              </span>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/shipping" className="transition hover:text-blue-600">Shipping</Link>

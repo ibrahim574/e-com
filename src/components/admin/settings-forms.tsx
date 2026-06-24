@@ -14,6 +14,8 @@ import {
   deleteTaxRuleAction,
   toggleTaxRuleAction,
   updateShippingRegionAction,
+  saveShippingZoneAction,
+  deleteShippingZoneAction,
   updateInvoiceSettingsAction,
 } from "@/app/actions/accounting";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,17 @@ type ShippingRow = {
   displayMessage: string | null;
 };
 
+type ShippingZoneRow = {
+  id: string;
+  name: string;
+  country: string;
+  provinces: string[];
+  baseCostCents: number;
+  costPerKgCents: number;
+  freeThresholdCents: number | null;
+  isEnabled: boolean;
+};
+
 const TABS = [
   { id: "currency", label: "Currency" },
   { id: "tax", label: "Tax Rules" },
@@ -62,6 +75,7 @@ export function SettingsForms({
   frequencyBands,
   taxRules,
   shippingRegions,
+  shippingZones,
   invoiceSettings,
   isSuperAdmin,
 }: {
@@ -70,6 +84,7 @@ export function SettingsForms({
   frequencyBands: Attr[];
   taxRules: TaxRuleRow[];
   shippingRegions: ShippingRow[];
+  shippingZones: ShippingZoneRow[];
   invoiceSettings: InvoiceSettingsData;
   isSuperAdmin: boolean;
 }) {
@@ -212,6 +227,40 @@ export function SettingsForms({
 
       {tab === "shipping" && (
         <div className="max-w-2xl space-y-4">
+          <form
+            action={handleSettings}
+            className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+            <input type="hidden" name="section" value="general" />
+            <h2 className="text-lg font-bold">Storefront display</h2>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="announcementEnabled"
+                defaultChecked={settings.announcementEnabled}
+              />
+              Show announcement bar in header
+            </label>
+            <div>
+              <Label htmlFor="announcementText">Announcement text</Label>
+              <Input
+                id="announcementText"
+                name="announcementText"
+                defaultValue={settings.announcementText}
+                placeholder="Free shipping available on eligible products and orders."
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="proudlyCanadianEnabled"
+                defaultChecked={settings.proudlyCanadianEnabled}
+              />
+              Show Proudly Canadian badge in footer
+            </label>
+            <Button type="submit" size="sm">Save display settings</Button>
+          </form>
+
           {shippingRegions.map((region) => (
             <form
               key={region.id}
@@ -257,6 +306,116 @@ export function SettingsForms({
                 />
               </div>
               <Button type="submit" size="sm">Save {region.country}</Button>
+            </form>
+          ))}
+
+          <form
+            action={saveShippingZoneAction}
+            className="space-y-3 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+          >
+            <h2 className="text-lg font-bold">Add shipping zone</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label>Name</Label>
+                <Input name="name" placeholder="Ontario" required />
+              </div>
+              <div>
+                <Label>Country</Label>
+                <Input name="country" defaultValue="CA" maxLength={2} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label>Provinces (comma-separated, empty = all)</Label>
+                <Input name="provinces" placeholder="ON, QC" />
+              </div>
+              <div>
+                <Label>Base cost ($)</Label>
+                <Input name="baseCostDollars" type="number" step="0.01" defaultValue="15.00" />
+              </div>
+              <div>
+                <Label>Cost per kg ($)</Label>
+                <Input name="costPerKgDollars" type="number" step="0.01" defaultValue="0.00" />
+              </div>
+              <div>
+                <Label>Free shipping threshold ($)</Label>
+                <Input name="freeThresholdDollars" type="number" step="0.01" placeholder="Optional" />
+              </div>
+              <label className="flex items-center gap-2 self-end text-sm">
+                <input type="checkbox" name="isEnabled" defaultChecked />
+                Enabled
+              </label>
+            </div>
+            <Button type="submit" size="sm">Add zone</Button>
+          </form>
+
+          {shippingZones.map((zone) => (
+            <form
+              key={zone.id}
+              action={saveShippingZoneAction}
+              className="space-y-3 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <input type="hidden" name="id" value={zone.id} />
+              <h2 className="text-lg font-bold">{zone.name}</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Name</Label>
+                  <Input name="name" defaultValue={zone.name} required />
+                </div>
+                <div>
+                  <Label>Country</Label>
+                  <Input name="country" defaultValue={zone.country} maxLength={2} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Provinces</Label>
+                  <Input name="provinces" defaultValue={zone.provinces.join(", ")} />
+                </div>
+                <div>
+                  <Label>Base cost ($)</Label>
+                  <Input
+                    name="baseCostDollars"
+                    type="number"
+                    step="0.01"
+                    defaultValue={(zone.baseCostCents / 100).toFixed(2)}
+                  />
+                </div>
+                <div>
+                  <Label>Cost per kg ($)</Label>
+                  <Input
+                    name="costPerKgDollars"
+                    type="number"
+                    step="0.01"
+                    defaultValue={(zone.costPerKgCents / 100).toFixed(2)}
+                  />
+                </div>
+                <div>
+                  <Label>Free threshold ($)</Label>
+                  <Input
+                    name="freeThresholdDollars"
+                    type="number"
+                    step="0.01"
+                    defaultValue={
+                      zone.freeThresholdCents != null
+                        ? (zone.freeThresholdCents / 100).toFixed(2)
+                        : ""
+                    }
+                  />
+                </div>
+                <label className="flex items-center gap-2 self-end text-sm">
+                  <input type="checkbox" name="isEnabled" defaultChecked={zone.isEnabled} />
+                  Enabled
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" size="sm">Save zone</Button>
+              </div>
+            </form>
+          ))}
+
+          {shippingZones.map((zone) => (
+            <form key={`del-${zone.id}`} action={deleteShippingZoneAction}>
+              <input type="hidden" name="id" value={zone.id} />
+              <Button type="submit" size="sm" variant="ghost" className="text-red-600">
+                Delete {zone.name}
+              </Button>
             </form>
           ))}
         </div>

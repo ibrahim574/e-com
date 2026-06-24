@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { regenerateInvoiceAction } from "@/app/actions/accounting";
+import { regenerateInvoiceAction, resendInvoiceEmailAction } from "@/app/actions/accounting";
 import { Button } from "@/components/ui/button";
 
 export function InvoiceActions({
@@ -45,6 +45,20 @@ export function InvoiceActions({
           {invoiceId ? "Re-generate Invoice" : "Generate Invoice"}
         </Button>
       </form>
+      {invoiceId && (
+        <form
+          action={async (fd) => {
+            fd.set("invoiceId", invoiceId);
+            const result = await resendInvoiceEmailAction(fd);
+            if (result?.success) setMessage("Invoice email sent to customer.");
+            else if (result?.error) setMessage(result.error);
+          }}
+        >
+          <Button type="submit" variant="outline" size="sm">
+            Re-send Invoice
+          </Button>
+        </form>
+      )}
       {message && <p className="w-full text-sm text-emerald-600">{message}</p>}
       {invoiceNumber && (
         <p className="w-full text-xs text-slate-500">Invoice #{invoiceNumber}</p>

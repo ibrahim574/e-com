@@ -127,7 +127,78 @@ export async function updateShippingRegionAction(formData: FormData) {
   revalidatePath("/shipping");
 }
 
-// --- Invoice Settings ---
+export async function saveShippingZoneAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const id = String(formData.get("id") ?? "").trim();
+  const name = sanitizeText(String(formData.get("name") ?? ""), 100);
+  const country = sanitizeText(String(formData.get("country") ?? "CA"), 2).toUpperCase();
+  const provinces = String(formData.get("provinces") ?? "")
+    .split(",")
+    .map((p) => p.trim().toUpperCase())
+    .filter(Boolean);
+  const baseCostCents = Math.round(Number(formData.get("baseCostDollars") ?? 0) * 100);
+  const costPerKgCents = Math.round(Number(formData.get("costPerKgDollars") ?? 0) * 100);
+  const freeThresholdCentsRaw = String(formData.get("freeThresholdDollars") ?? "").trim();
+  const freeThresholdCents = freeThresholdCentsRaw
+    ? Math.round(Number(freeThresholdCentsRaw) * 100)
+    : null;
+  const isEnabled = formData.get("isEnabled") === "on";
+
+  if (!name) return;
+
+  if (id) {
+    await prisma.shippingZone.update({
+      where: { id },
+      data: {
+        name,
+        country,
+        provinces,
+        baseCostCents,
+        costPerKgCents,
+        freeThresholdCents,
+        isEnabled,
+      },
+    });
+  } else {
+    await prisma.shippingZone.create({
+      data: {
+        name,
+        country,
+        provinces,
+        baseCostCents,
+        costPerKgCents,
+        freeThresholdCents,
+        isEnabled,
+      },
+    });
+  }
+
+  await recordAudit({
+    actor,
+    action: "SETTING",
+    entityType: "SiteSettings",
+    summary: `${id ? "Updated" : "Created"} shipping zone ${name}`,
+    ipAddress: await getRequestIp(),
+  });
+
+  revalidatePath("/admin/settings");
+}
+
+export async function deleteShippingZoneAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  await prisma.shippingZone.delete({ where: { id } });
+  await recordAudit({
+    actor,
+    action: "DELETE",
+    entityType: "SiteSettings",
+    entityId: id,
+    summary: "Deleted shipping zone",
+    ipAddress: await getRequestIp(),
+  });
+  revalidatePath("/admin/settings");
+}
 
 export async function updateInvoiceSettingsAction(formData: FormData) {
   const actor = await getActorOrThrow();
@@ -199,6 +270,27 @@ export async function regenerateInvoiceAction(formData: FormData) {
   return { success: true, invoiceNumber: result.invoiceNumber };
 }
 
+export async function resendInvoiceEmailAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const invoiceId = String(formData.get("invoiceId") ?? "");
+  if (!invoiceId) return { error: "Invoice not found." };
+
+  const { emailInvoiceToCustomer } = await import("@/lib/invoice/invoice-service");
+  const sent = await emailInvoiceToCustomer(invoiceId);
+  if (!sent) return { error: "Could not send invoice email." };
+
+  await recordAudit({
+    actor,
+    action: "INVOICE",
+    entityType: "Invoice",
+    entityId: invoiceId,
+    summary: "Re-sent invoice email to customer",
+    ipAddress: await getRequestIp(),
+  });
+
+  return { success: true };
+}
+
 // --- Expenses ---
 
 export async function createExpenseAction(formData: FormData) {
@@ -247,6 +339,37 @@ export async function createExpenseAction(formData: FormData) {
     newValue: { description, amountCents, category: expense.category.name },
   });
 
+  revalidatePath("/admin/accounting/expenses");
+}
+
+export async function updateExpenseAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const id = String(formData.get("id") ?? "");
+  const description = sanitizeText(String(formData.get("description") ?? ""), 500);
+  const amountCents = Math.round(Number(formData.get("amountDollars") ?? 0) * 100);
+  const expenseDate = new Date(String(formData.get("expenseDate") ?? ""));
+  const paymentStatus = String(formData.get("paymentStatus") ?? "PAID") as ExpensePaymentStatus;
+
+  const before = await prisma.expense.findUnique({ where: { id } });
+  if (!before) return;
+
+  await prisma.expense.update({
+    where: { id },
+    data: { description, amountCents, expenseDate, paymentStatus },
+  });
+
+  await recordAudit({
+    actor,
+    action: "EXPENSE",
+    entityType: "Expense",
+    entityId: id,
+    summary: "Updated expense",
+    ipAddress: await getRequestIp(),
+    previousValue: before,
+    newValue: { description, amountCents, expenseDate, paymentStatus },
+  });
+
+  cacheInvalidatePrefix("financial-kpis");
   revalidatePath("/admin/accounting/expenses");
 }
 
@@ -333,6 +456,16 @@ export async function issueRefundAction(formData: FormData) {
     await prisma.paymentRecord.updateMany({
       where: { orderId },
       data: { status: "REFUNDED" },
+    });
+  } else {
+    const note = `Partial refund ${formatPrice(amountCents, order.currency)}${transactionReference ? ` ref ${transactionReference}` : ""}`;
+    await prisma.paymentRecord.updateMany({
+      where: { orderId, status: "PAID" },
+      data: {
+        transactionReference: transactionReference
+          ? `${transactionReference} | ${note}`
+          : note,
+      },
     });
   }
 

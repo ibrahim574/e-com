@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { adminLoginAction } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,11 @@ export default function AdminLoginPage() {
             Sign In
           </Button>
         </form>
+        <p className="mt-4 text-center text-sm text-slate-600">
+          <Link href="/admin/forgot-password" className="font-medium text-blue-600 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
       </div>
     </div>
   );

@@ -16,6 +16,9 @@ export type SiteSettings = {
   smtpPasswordEnc: string | null;
   smtpFrom: string | null;
   sessionTimeoutMinutes: number;
+  announcementText: string;
+  announcementEnabled: boolean;
+  proudlyCanadianEnabled: boolean;
   updatedAt: Date;
 };
 
@@ -26,6 +29,9 @@ const DEFAULTS = {
   companyName: "WirelessCom",
   quoteRecipients: "abu@wirelesscom.ca, service@wirelesscom.ca",
   sessionTimeoutMinutes: 30,
+  announcementText: "Free shipping available on eligible products and orders.",
+  announcementEnabled: true,
+  proudlyCanadianEnabled: true,
 };
 
 /** Returns the singleton SiteSettings row, creating it if missing. Cached per request. */

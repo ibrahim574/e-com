@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getActorOrThrow, getSuperActorOrThrow } from "@/lib/admin-guard";
 import { recordAudit } from "@/lib/audit";
+import { validatePassword } from "@/lib/password-policy";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -26,6 +27,10 @@ export async function createAdminAction(formData: FormData) {
   }
   if (password.length < 6) {
     return { error: "Password must be at least 6 characters." };
+  }
+  const pwCheck = validatePassword(password);
+  if (!pwCheck.valid) {
+    return { error: pwCheck.errors.join(" ") };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -162,6 +167,10 @@ export async function changeAdminPasswordAction(formData: FormData) {
 
   if (next.length < 8) {
     return { error: "New password must be at least 8 characters." };
+  }
+  const pwCheck = validatePassword(next);
+  if (!pwCheck.valid) {
+    return { error: pwCheck.errors.join(" ") };
   }
   if (next !== confirm) {
     return { error: "Passwords do not match." };

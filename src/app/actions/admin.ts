@@ -155,6 +155,16 @@ export async function saveProductAction(formData: FormData) {
   const frequencyBandIds = formData.getAll("frequencyBandIds").map(String);
   const relatedProductIds = formData.getAll("relatedProductIds").map(String);
   const compatibleProductIds = formData.getAll("compatibleProductIds").map(String);
+  const shippingEnabled = formData.get("shippingEnabled") !== "off";
+  const lengthCm = formData.get("lengthCm")
+    ? Number(formData.get("lengthCm"))
+    : null;
+  const widthCm = formData.get("widthCm") ? Number(formData.get("widthCm")) : null;
+  const heightCm = formData.get("heightCm") ? Number(formData.get("heightCm")) : null;
+  const weightGrams = formData.get("weightGrams")
+    ? Math.round(Number(formData.get("weightGrams")))
+    : null;
+  const shippingClassId = String(formData.get("shippingClassId") ?? "").trim() || null;
 
   const data = {
     name,
@@ -180,6 +190,12 @@ export async function saveProductAction(formData: FormData) {
     allowCustomFrequency,
     customTxRequired,
     customRxRequired,
+    shippingEnabled,
+    lengthCm,
+    widthCm,
+    heightCm,
+    weightGrams,
+    shippingClassId,
   };
 
   let productId = id;
@@ -533,6 +549,36 @@ export async function saveVariantAction(formData: FormData) {
 
   revalidatePath(`/admin/products/${productId}/edit`);
   redirect(`/admin/products/${productId}/edit?saved=1`);
+}
+
+export async function deleteVariantAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const variantId = String(formData.get("variantId") ?? "");
+  const productId = String(formData.get("productId") ?? "");
+  if (!variantId) return;
+
+  const orderCount = await prisma.orderItem.count({ where: { variantId } });
+  if (orderCount > 0) return;
+
+  const cartCount = await prisma.cartItem.count({ where: { variantId } });
+  if (cartCount > 0) return;
+
+  const variant = await prisma.productVariant.findUnique({ where: { id: variantId } });
+  if (!variant) return;
+
+  await prisma.productVariantOption.deleteMany({ where: { variantId } });
+  await prisma.productVariant.delete({ where: { id: variantId } });
+
+  await recordAudit({
+    actor,
+    action: "DELETE",
+    entityType: "ProductVariant",
+    entityId: variantId,
+    summary: `Deleted variant ${variant.sku}`,
+    metadata: { productId },
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
 }
 
 export async function saveProductOptionAction(formData: FormData) {

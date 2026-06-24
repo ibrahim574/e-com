@@ -66,6 +66,12 @@ enum InventoryChangeType {
   DELETED_VARIANT
 }
 
+enum QuoteSubmissionType {
+  QUOTE
+  PREORDER
+  STAY_CONNECTED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -88,6 +94,7 @@ model User {
   expenses           Expense[]
   refundsProcessed   Refund[]            @relation("RefundProcessedBy")
   inventoryChanges   InventoryMovement[] @relation("InventoryChangedBy")
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Category {
@@ -165,6 +172,12 @@ model Product {
   allowCustomFrequency Boolean       @default(false)
   customTxRequired     Boolean       @default(false)
   customRxRequired     Boolean       @default(false)
+  shippingEnabled      Boolean       @default(true)
+  lengthCm             Float?
+  widthCm              Float?
+  heightCm             Float?
+  weightGrams          Int?
+  shippingClassId      String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
@@ -183,6 +196,7 @@ model Product {
   compatibleFrom      CompatibleProduct[]    @relation("ProductCompatibleFrom")
   compatibleTo        CompatibleProduct[]    @relation("ProductCompatibleTo")
   inventoryMovements  InventoryMovement[]
+  shippingClass       ShippingClass?         @relation(fields: [shippingClassId], references: [id], onDelete: SetNull)
 }
 
 model RelatedProduct {
@@ -262,8 +276,15 @@ model ProductVariant {
   saleCadCents  Int?
   saleUsdCents  Int?
   image         String?
+  shippingEnabled Boolean @default(true)
+  lengthCm      Float?
+  widthCm       Float?
+  heightCm      Float?
+  weightGrams   Int?
+  shippingClassId String?
 
-  product    Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product       Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shippingClass ShippingClass?         @relation(fields: [shippingClassId], references: [id], onDelete: SetNull)
   options    ProductVariantOption[]
   cartItems  CartItem[]
   orderItems OrderItem[]
@@ -342,6 +363,8 @@ model Order {
   taxLabel        String?
   taxRatePercent  Float?
   adjustmentCents Int         @default(0)
+  shippingOverride Boolean    @default(false)
+  taxOverride     Boolean     @default(false)
   totalCents      Int
   trackingNumber  String?
   paypalOrderId   String?
@@ -382,8 +405,9 @@ model OrderItem {
   sku            String?
   quantity       Int
   unitPriceCents Int
-  txFrequency    String?
-  rxFrequency    String?
+  txFrequency       String?
+  rxFrequency       String?
+  selectedFrequency String?
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id])
@@ -434,6 +458,9 @@ model SiteSettings {
   smtpPasswordEnc       String?
   smtpFrom              String?
   sessionTimeoutMinutes Int      @default(30)
+  announcementText      String   @default("Free shipping available on eligible products and orders.")
+  announcementEnabled   Boolean  @default(true)
+  proudlyCanadianEnabled Boolean @default(true)
   updatedAt             DateTime @updatedAt
 }
 
@@ -626,6 +653,61 @@ model InventoryMovement {
 
   @@index([productId])
   @@index([changedAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model QuoteSubmission {
+  id              String              @id @default(cuid())
+  type            QuoteSubmissionType
+  name            String
+  email           String
+  phone           String?
+  productInterest String?
+  quantity        String?
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now())
+
+  @@index([type])
+  @@index([createdAt])
+}
+
+model ShippingClass {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String?
+  surchargeCents  Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  products Product[]
+  variants ProductVariant[]
+}
+
+model ShippingZone {
+  id               String   @id @default(cuid())
+  name             String
+  country          String   @default("CA")
+  provinces        String[] @default([])
+  baseCostCents    Int      @default(1500)
+  costPerKgCents   Int      @default(0)
+  freeThresholdCents Int?
+  isEnabled        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([country])
 }
 
 model PendingRegistration {

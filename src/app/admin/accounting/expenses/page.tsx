@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   createExpenseAction,
   deleteExpenseAction,
+  updateExpenseAction,
   createExpenseCategoryAction,
 } from "@/app/actions/accounting";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,22 @@ export default async function ExpensesPage() {
                 <td className="p-3 text-right">{formatPrice(e.amountCents, "CAD")}</td>
                 <td className="p-3 capitalize">{e.paymentStatus.toLowerCase().replace("_", " ")}</td>
                 <td className="p-3">
-                  <form action={deleteExpenseAction}>
+                  <details>
+                    <summary className="cursor-pointer text-blue-600">Edit</summary>
+                    <form action={updateExpenseAction} className="mt-2 grid gap-2 rounded border p-2">
+                      <input type="hidden" name="id" value={e.id} />
+                      <Input name="expenseDate" type="date" defaultValue={e.expenseDate.toISOString().slice(0, 10)} />
+                      <Input name="description" defaultValue={e.description} required />
+                      <Input name="amountDollars" type="number" step="0.01" defaultValue={(e.amountCents / 100).toFixed(2)} />
+                      <select name="paymentStatus" defaultValue={e.paymentStatus} className="rounded border px-2 py-1 text-sm">
+                        <option value="PAID">Paid</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="PARTIALLY_PAID">Partially Paid</option>
+                      </select>
+                      <Button type="submit" size="sm">Save</Button>
+                    </form>
+                  </details>
+                  <form action={deleteExpenseAction} className="mt-1">
                     <input type="hidden" name="id" value={e.id} />
                     <Button type="submit" variant="ghost" size="sm" className="text-red-600">Delete</Button>
                   </form>

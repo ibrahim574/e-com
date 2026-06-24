@@ -7,9 +7,10 @@ export const GUEST_CART_COOKIE = "guest_cart_id";
 const cartInclude = {
   items: {
     include: {
-      product: true,
+      product: { include: { shippingClass: true } },
       variant: {
         include: {
+          shippingClass: true,
           options: {
             include: { optionValue: { include: { option: true } } },
           },

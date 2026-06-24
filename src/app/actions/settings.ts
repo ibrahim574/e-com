@@ -112,6 +112,30 @@ export async function updateSiteSettingsAction(formData: FormData) {
       update: { sessionTimeoutMinutes },
       create: { id: "singleton", sessionTimeoutMinutes },
     });
+  } else if (section === "general") {
+    const announcementText = sanitizeText(
+      String(formData.get("announcementText") ?? ""),
+      300,
+    );
+    const announcementEnabled = formData.get("announcementEnabled") === "on";
+    const proudlyCanadianEnabled = formData.get("proudlyCanadianEnabled") === "on";
+    await prisma.siteSettings.upsert({
+      where: { id: "singleton" },
+      update: { announcementText, announcementEnabled, proudlyCanadianEnabled },
+      create: {
+        id: "singleton",
+        announcementText,
+        announcementEnabled,
+        proudlyCanadianEnabled,
+      },
+    });
+    await recordAudit({
+      actor,
+      action: "SETTING",
+      entityType: "SiteSettings",
+      entityId: "singleton",
+      summary: "Storefront display settings updated",
+    });
   }
 
   cacheInvalidate("site-settings");

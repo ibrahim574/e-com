@@ -10,6 +10,8 @@ import {
 } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { passwordPolicyHint } from "@/lib/password-policy";
 import { RESEND_COOLDOWN_MS } from "@/lib/otp";
 
 type Step = "details" | "otp";
@@ -131,15 +133,15 @@ export default function RegisterPage() {
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="mt-1 text-xs text-slate-500">{passwordPolicyHint()}</p>
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <Button type="submit" className="w-full" disabled={isPending}>

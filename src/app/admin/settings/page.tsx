@@ -11,13 +11,14 @@ export const dynamic = "force-dynamic";
 export default async function AdminSettingsPage() {
   await requireAdmin();
   const session = await auth();
-  const [settings, signalTypes, frequencyBands, taxRules, shippingRegions, invoiceSettings] =
+  const [settings, signalTypes, frequencyBands, taxRules, shippingRegions, shippingZones, invoiceSettings] =
     await Promise.all([
       getSiteSettings(),
       prisma.signalType.findMany({ orderBy: { name: "asc" } }),
       prisma.frequencyBand.findMany({ orderBy: { name: "asc" } }),
       prisma.taxRule.findMany({ orderBy: [{ country: "asc" }, { province: "asc" }] }),
       prisma.shippingRegion.findMany({ orderBy: { country: "asc" } }),
+      prisma.shippingZone.findMany({ orderBy: { name: "asc" } }),
       getInvoiceSettings(),
     ]);
 
@@ -40,6 +41,7 @@ export default async function AdminSettingsPage() {
         frequencyBands={frequencyBands}
         taxRules={taxRules}
         shippingRegions={shippingRegions}
+        shippingZones={shippingZones}
         invoiceSettings={invoiceSettings}
         isSuperAdmin={isSuperAdmin}
       />

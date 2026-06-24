@@ -7,10 +7,12 @@ import {
   updateOrderItemQuantityAction,
   removeOrderItemAction,
 } from "@/app/actions/orders";
+import { AddOrderItemForm } from "@/components/admin/add-order-item-form";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import type { OrderStatus } from "@prisma/client";
 import { formatPrice } from "@/lib/utils";
+import { formatItemFrequency } from "@/lib/order-item-frequency";
 
 type OrderEditorProps = {
   order: {
@@ -20,6 +22,11 @@ type OrderEditorProps = {
     currency: "CAD" | "USD";
     trackingNumber: string | null;
     adjustmentCents: number;
+    shippingCents: number;
+    taxCents: number;
+    taxLabel: string | null;
+    shippingOverride: boolean;
+    taxOverride: boolean;
     shippingName: string;
     shippingLine1: string;
     shippingLine2: string | null;
@@ -27,12 +34,20 @@ type OrderEditorProps = {
     shippingState: string;
     shippingPostal: string;
     shippingCountry: string;
+    billingName: string | null;
+    billingLine1: string | null;
+    billingLine2: string | null;
+    billingCity: string | null;
+    billingState: string | null;
+    billingPostal: string | null;
+    billingCountry: string | null;
     items: Array<{
       id: string;
       productName: string;
       variantLabel: string | null;
       quantity: number;
       unitPriceCents: number;
+      selectedFrequency: string | null;
       txFrequency: string | null;
       rxFrequency: string | null;
     }>;
@@ -91,7 +106,7 @@ export function OrderEditor({ order, statuses }: OrderEditorProps) {
             />
           </div>
           <div>
-            <Label htmlFor="adjustmentCents">Price Adjustment</Label>
+            <Label htmlFor="adjustmentCents">Discount / adjustment ($)</Label>
             <Input
               id="adjustmentCents"
               name="adjustmentCents"
@@ -99,6 +114,45 @@ export function OrderEditor({ order, statuses }: OrderEditorProps) {
               step="0.01"
               defaultValue={(order.adjustmentCents / 100).toFixed(2)}
             />
+            <p className="mt-1 text-xs text-slate-500">Use negative values for discounts.</p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <h3 className="font-semibold text-slate-900">Shipping &amp; tax overrides</h3>
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="shippingOverride" defaultChecked={order.shippingOverride} />
+              Manual shipping amount
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="taxOverride" defaultChecked={order.taxOverride} />
+              Manual tax amount
+            </label>
+            <div>
+              <Label htmlFor="shippingCents">Shipping ($)</Label>
+              <Input
+                id="shippingCents"
+                name="shippingCents"
+                type="number"
+                step="0.01"
+                defaultValue={(order.shippingCents / 100).toFixed(2)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="taxCents">Tax ($)</Label>
+              <Input
+                id="taxCents"
+                name="taxCents"
+                type="number"
+                step="0.01"
+                defaultValue={(order.taxCents / 100).toFixed(2)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="taxLabel">Tax label</Label>
+              <Input id="taxLabel" name="taxLabel" defaultValue={order.taxLabel ?? "HST"} />
+            </div>
           </div>
         </div>
 
@@ -134,54 +188,84 @@ export function OrderEditor({ order, statuses }: OrderEditorProps) {
           </div>
         </div>
 
+        <h3 className="font-semibold text-slate-900">Billing Address</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Label htmlFor="billingName">Name</Label>
+            <Input id="billingName" name="billingName" defaultValue={order.billingName ?? ""} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="billingLine1">Address Line 1</Label>
+            <Input id="billingLine1" name="billingLine1" defaultValue={order.billingLine1 ?? ""} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="billingLine2">Address Line 2</Label>
+            <Input id="billingLine2" name="billingLine2" defaultValue={order.billingLine2 ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="billingCity">City</Label>
+            <Input id="billingCity" name="billingCity" defaultValue={order.billingCity ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="billingState">State/Province</Label>
+            <Input id="billingState" name="billingState" defaultValue={order.billingState ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="billingPostal">Postal Code</Label>
+            <Input id="billingPostal" name="billingPostal" defaultValue={order.billingPostal ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="billingCountry">Country</Label>
+            <Input id="billingCountry" name="billingCountry" defaultValue={order.billingCountry ?? ""} />
+          </div>
+        </div>
+
         <Button type="submit">Save Changes</Button>
       </form>
 
       <div className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="text-lg font-bold">Line Items</h2>
         <ul className="mt-4 space-y-3">
-          {order.items.map((item) => (
-            <li key={item.id} className="rounded-lg border border-slate-100 p-3 text-sm">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-medium">{item.productName}</p>
-                  {item.variantLabel && (
-                    <p className="text-slate-500">{item.variantLabel}</p>
-                  )}
-                  {(item.txFrequency || item.rxFrequency) && (
-                    <p className="text-xs text-slate-500">
-                      TX: {item.txFrequency || "—"} · RX: {item.rxFrequency || "—"}
+          {order.items.map((item) => {
+            const freq = formatItemFrequency(item);
+            return (
+              <li key={item.id} className="rounded-lg border border-slate-100 p-3 text-sm">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{item.productName}</p>
+                    {item.variantLabel && <p className="text-slate-500">{item.variantLabel}</p>}
+                    {freq && <p className="text-xs text-slate-500">{freq}</p>}
+                    <p className="text-slate-600">
+                      {formatPrice(item.unitPriceCents, order.currency)} each
                     </p>
-                  )}
-                  <p className="text-slate-600">
-                    {formatPrice(item.unitPriceCents, order.currency)} each
-                  </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <form action={updateOrderItemQuantityAction} className="flex items-center gap-2">
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <Input
+                        name="quantity"
+                        type="number"
+                        min="1"
+                        defaultValue={item.quantity}
+                        className="w-20"
+                      />
+                      <Button type="submit" size="sm">
+                        Update
+                      </Button>
+                    </form>
+                    <form action={removeOrderItemAction}>
+                      <input type="hidden" name="itemId" value={item.id} />
+                      <Button type="submit" size="sm" variant="ghost" className="text-red-600">
+                        Remove
+                      </Button>
+                    </form>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <form action={updateOrderItemQuantityAction} className="flex items-center gap-2">
-                    <input type="hidden" name="itemId" value={item.id} />
-                    <Input
-                      name="quantity"
-                      type="number"
-                      min="1"
-                      defaultValue={item.quantity}
-                      className="w-20"
-                    />
-                    <Button type="submit" size="sm">
-                      Update
-                    </Button>
-                  </form>
-                  <form action={removeOrderItemAction}>
-                    <input type="hidden" name="itemId" value={item.id} />
-                    <Button type="submit" size="sm" variant="ghost" className="text-red-600">
-                      Remove
-                    </Button>
-                  </form>
-                </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
+        <AddOrderItemForm orderId={order.id} currency={order.currency} />
       </div>
 
       <div>

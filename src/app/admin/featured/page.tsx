@@ -29,32 +29,32 @@ export default async function AdminFeaturedPage() {
 
       <FeaturedItemForm />
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-wrap items-start gap-4 rounded-xl border border-slate-200 bg-white p-4"
-          >
-            {item.image && (
-              <div className="relative h-24 w-32 overflow-hidden rounded-lg bg-slate-50">
-                <Image src={item.image} alt={item.altText ?? item.title} fill className="object-cover" />
-              </div>
-            )}
-            <div className="flex-1">
-              <p className="font-bold">{item.title}</p>
-              {item.videoUrl && (
-                <p className="text-xs text-slate-500 truncate">{item.videoUrl}</p>
+          <div key={item.id} className="space-y-4">
+            <div className="flex flex-wrap items-start gap-4 rounded-xl border border-slate-200 bg-white p-4">
+              {item.image && (
+                <div className="relative h-24 w-32 overflow-hidden rounded-lg bg-slate-50">
+                  <Image src={item.image} alt={item.altText ?? item.title} fill className="object-cover" />
+                </div>
               )}
-              <p className="text-xs text-slate-400">
-                Position {item.position} · {item.isActive ? "Active" : "Hidden"}
-              </p>
+              <div className="flex-1">
+                <p className="font-bold">{item.title}</p>
+                {item.videoUrl && (
+                  <p className="truncate text-xs text-slate-500">{item.videoUrl}</p>
+                )}
+                <p className="text-xs text-slate-400">
+                  Position {item.position} · {item.isActive ? "Active" : "Hidden"}
+                </p>
+              </div>
+              <form action={deleteFeaturedItemAction}>
+                <input type="hidden" name="id" value={item.id} />
+                <Button type="submit" variant="ghost" className="text-red-600">
+                  Delete
+                </Button>
+              </form>
             </div>
-            <form action={deleteFeaturedItemAction}>
-              <input type="hidden" name="id" value={item.id} />
-              <Button type="submit" variant="ghost" className="text-red-600">
-                Delete
-              </Button>
-            </form>
+            <FeaturedItemForm item={item} />
           </div>
         ))}
       </div>

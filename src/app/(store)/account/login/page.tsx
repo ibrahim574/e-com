@@ -5,6 +5,7 @@ import { useState } from "react";
 import { loginAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -26,8 +27,13 @@ export default function LoginPage() {
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" required />
+            <PasswordInput id="password" name="password" required />
           </div>
+          <p className="text-right text-sm">
+            <Link href="/account/forgot-password" className="font-medium text-blue-600 hover:underline">
+              Forgot password?
+            </Link>
+          </p>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full">
             Sign In

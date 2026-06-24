@@ -26,8 +26,14 @@ export async function addToCartAction(formData: FormData) {
     ? String(formData.get("variantId"))
     : null;
   const requested = Math.max(1, Number(formData.get("quantity") ?? 1));
-  const txFrequency = String(formData.get("txFrequency") ?? "").trim();
-  const rxFrequency = String(formData.get("rxFrequency") ?? "").trim();
+  const selectedFrequency = String(formData.get("selectedFrequency") ?? "").trim();
+  const isCustom = selectedFrequency === "Custom Frequency";
+  let txFrequency = String(formData.get("txFrequency") ?? "").trim();
+  let rxFrequency = String(formData.get("rxFrequency") ?? "").trim();
+  if (!isCustom && selectedFrequency) {
+    txFrequency = selectedFrequency;
+    rxFrequency = "";
+  }
   const stockLimit = await getStockLimit(productId, variantId);
   if (stockLimit <= 0) return;
 

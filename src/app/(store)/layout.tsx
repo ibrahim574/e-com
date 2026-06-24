@@ -36,9 +36,14 @@ export default async function StoreLayout({
         dualCurrency={settings.dualCurrencyEnabled}
         categories={categories}
         industries={industries}
+        announcementText={settings.announcementText}
+        announcementEnabled={settings.announcementEnabled}
       />
       <main className="flex-1">{children}</main>
-      <Footer dualCurrency={settings.dualCurrencyEnabled} />
+      <Footer
+        dualCurrency={settings.dualCurrencyEnabled}
+        proudlyCanadianEnabled={settings.proudlyCanadianEnabled}
+      />
     </>
   );
 }

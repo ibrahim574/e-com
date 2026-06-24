@@ -37,11 +37,17 @@ type ProductFormProps = {
     frequencyBands?: Array<{ frequencyBandId: string }>;
     relatedFrom?: Array<{ relatedProductId: string }>;
     compatibleFrom?: Array<{ compatibleProductId: string }>;
+    shippingEnabled?: boolean;
+    lengthCm?: number | null;
+    widthCm?: number | null;
+    heightCm?: number | null;
+    weightGrams?: number | null;
+    shippingClassId?: string | null;
   };
 };
 
 export async function ProductForm({ product }: ProductFormProps) {
-  const [categories, industries, seriesList, signalTypes, frequencyBands, allProducts] =
+  const [categories, industries, seriesList, signalTypes, frequencyBands, allProducts, shippingClasses] =
     await Promise.all([
       prisma.category.findMany({ orderBy: { name: "asc" } }),
       prisma.industry.findMany({ orderBy: { name: "asc" } }),
@@ -53,6 +59,7 @@ export async function ProductForm({ product }: ProductFormProps) {
         orderBy: { name: "asc" },
         select: { id: true, name: true },
       }),
+      prisma.shippingClass.findMany({ orderBy: { name: "asc" } }),
     ]);
 
   const selectedCategoryIds = new Set(
@@ -406,6 +413,52 @@ export async function ProductForm({ product }: ProductFormProps) {
                 {p.name}
               </label>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 p-4">
+        <h2 className="text-base font-bold text-slate-900">Shipping</h2>
+        <label className="mt-3 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="shippingEnabled"
+            defaultChecked={product?.shippingEnabled ?? true}
+          />
+          Include in shipping weight calculation
+        </label>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Label htmlFor="weightGrams">Weight (grams)</Label>
+            <Input id="weightGrams" name="weightGrams" type="number" min="0" defaultValue={product?.weightGrams ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="lengthCm">Length (cm)</Label>
+            <Input id="lengthCm" name="lengthCm" type="number" min="0" step="0.1" defaultValue={product?.lengthCm ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="widthCm">Width (cm)</Label>
+            <Input id="widthCm" name="widthCm" type="number" min="0" step="0.1" defaultValue={product?.widthCm ?? ""} />
+          </div>
+          <div>
+            <Label htmlFor="heightCm">Height (cm)</Label>
+            <Input id="heightCm" name="heightCm" type="number" min="0" step="0.1" defaultValue={product?.heightCm ?? ""} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="shippingClassId">Shipping class</Label>
+            <select
+              id="shippingClassId"
+              name="shippingClassId"
+              defaultValue={product?.shippingClassId ?? ""}
+              className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+            >
+              <option value="">Standard</option>
+              {shippingClasses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

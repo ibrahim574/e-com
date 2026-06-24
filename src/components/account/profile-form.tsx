@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateCustomerProfileAction } from "@/app/actions/customer";
+import { updateCustomerProfileAction, changeCustomerPasswordAction } from "@/app/actions/customer";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
+import { passwordPolicyHint } from "@/lib/password-policy";
 
 export type ProfileDefaults = {
   name: string | null;
@@ -21,6 +23,23 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdSuccess, setPwdSuccess] = useState<string | null>(null);
+  const [pwdPending, startPwdTransition] = useTransition();
+
+  function handlePassword(formData: FormData) {
+    setPwdError(null);
+    setPwdSuccess(null);
+    startPwdTransition(async () => {
+      const result = await changeCustomerPasswordAction(formData);
+      if (result?.error) {
+        setPwdError(result.error);
+        return;
+      }
+      setPwdSuccess("Password updated.");
+    });
+  }
 
   function handle(formData: FormData) {
     setError(null);
@@ -130,6 +149,32 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
             <p className="mt-1 text-xs text-slate-500">2-letter code (CA, US)</p>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
+        <h2 className="text-base font-bold text-slate-900">Change password</h2>
+        <form action={handlePassword} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Label htmlFor="currentPassword">Current password</Label>
+            <PasswordInput id="currentPassword" name="currentPassword" required autoComplete="current-password" />
+          </div>
+          <div>
+            <Label htmlFor="newPassword">New password</Label>
+            <PasswordInput id="newPassword" name="newPassword" required minLength={8} autoComplete="new-password" />
+          </div>
+          <div>
+            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <PasswordInput id="confirmPassword" name="confirmPassword" required minLength={8} autoComplete="new-password" />
+          </div>
+          <p className="sm:col-span-2 text-xs text-slate-500">{passwordPolicyHint()}</p>
+          {pwdError && <p className="sm:col-span-2 text-sm text-red-600">{pwdError}</p>}
+          {pwdSuccess && <p className="sm:col-span-2 text-sm text-emerald-600">{pwdSuccess}</p>}
+          <div className="sm:col-span-2 flex justify-end">
+            <Button type="submit" variant="outline" disabled={pwdPending}>
+              {pwdPending ? "Updating..." : "Update password"}
+            </Button>
+          </div>
+        </form>
       </section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
