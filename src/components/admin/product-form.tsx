@@ -1,4 +1,5 @@
 import { saveProductAction } from "@/app/actions/admin";
+import { ProductImageManager } from "@/components/admin/product-image-manager";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { prisma } from "@/lib/prisma";
@@ -97,14 +98,7 @@ export async function ProductForm({ product }: ProductFormProps) {
         />
       </div>
 
-      <div>
-        <Label htmlFor="images">Image URLs (one per line)</Label>
-        <Textarea
-          id="images"
-          name="images"
-          defaultValue={(product?.images ?? ["/placeholder-product.svg"]).join("\n")}
-        />
-      </div>
+      <ProductImageManager defaultImages={product?.images ?? []} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>

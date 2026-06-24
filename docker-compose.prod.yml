@@ -44,6 +44,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./public/products/uploads:/app/public/products/uploads
 
   caddy:
     image: caddy:2-alpine

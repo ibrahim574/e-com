@@ -7,7 +7,15 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 import { getActorOrThrow, isAdminRole } from "@/lib/admin-guard";
 import { recordAudit } from "@/lib/audit";
+import {
+  deleteProductImageFile,
+  saveProductImageFile,
+} from "@/lib/product-images";
 import { ProductStatus, OrderStatus } from "@prisma/client";
+
+export type ProductImageActionResult =
+  | { ok: true; url: string }
+  | { ok: false; error: string };
 
 const ORDER_STATUSES: OrderStatus[] = [
   "PENDING",
@@ -48,6 +56,48 @@ export async function updateOrderStatusAction(formData: FormData) {
 
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
+}
+
+export async function uploadProductImageAction(
+  formData: FormData,
+): Promise<ProductImageActionResult> {
+  try {
+    await getActorOrThrow();
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, error: "No image file provided." };
+    }
+
+    const url = await saveProductImageFile(file);
+    return { ok: true, url };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Upload failed.",
+    };
+  }
+}
+
+export async function deleteProductImageAction(
+  formData: FormData,
+): Promise<ProductImageActionResult> {
+  try {
+    await getActorOrThrow();
+
+    const url = String(formData.get("url") ?? "").trim();
+    if (!url) {
+      return { ok: false, error: "No image URL provided." };
+    }
+
+    await deleteProductImageFile(url);
+    return { ok: true, url };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : "Delete failed.",
+    };
+  }
 }
 
 export async function saveProductAction(formData: FormData) {

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "[entrypoint] Ensuring product uploads directory exists..."
+mkdir -p public/products/uploads
+
 echo "[entrypoint] Applying database migrations..."
 if ! npx prisma migrate deploy; then
   echo "[entrypoint] WARNING: 'prisma migrate deploy' failed. Continuing so the app can start; check DATABASE_URL and the db service."
