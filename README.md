@@ -100,6 +100,68 @@ PAYPAL_MODE=sandbox
 NEXT_PUBLIC_PAYPAL_CLIENT_ID=your-sandbox-client-id
 ```
 
+### Sandbox is safe for public testing
+
+With `PAYPAL_MODE=sandbox`, the server uses PayPal's sandbox API — no real money is charged. Test buyers use sandbox accounts at https://sandbox.paypal.com. Your database will still record orders as paid (that is your app's state, not a real transaction). Use sandbox credentials only until you intentionally switch to live.
+
+## Public Testing (Cloudflare)
+
+Use this when the site is behind Cloudflare's orange-cloud proxy. It runs a **production build** on port 80 (no dev auto-reload, buttons work from remote PCs).
+
+### Zero-config deploy (recommended)
+
+A ready-to-run env file is committed at [`.env.public`](.env.public) with your domain, PayPal sandbox keys, and SMTP credentials. On Ubuntu:
+
+```bash
+git clone https://github.com/AbuSufian6543/wirelesscom-e-commerce.git
+cd wirelesscom-e-commerce
+chmod +x deploy-public.sh
+./deploy-public.sh
+```
+
+Or without the script:
+
+```bash
+docker compose --env-file .env.public -f docker-compose.public.yml up -d --build
+```
+
+Open **https://hyteraradios.ca** from any PC.
+
+Cloudflare settings (one-time in dashboard):
+
+- **SSL/TLS → Flexible** (browser HTTPS, origin HTTP on port 80)
+- **Rocket Loader → Off**
+- **Auto Minify JavaScript → Off**
+
+Default admin after seed: `admin@example.com` / `admin123` at `/admin`.
+
+### Custom env (optional)
+
+If you need different values, copy and edit:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Set at minimum:
+
+```env
+AUTH_SECRET=<openssl rand -hex 32>
+NEXTAUTH_URL=https://your-domain.com
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+PAYPAL_MODE=sandbox
+PAYPAL_CLIENT_ID=<sandbox client id>
+PAYPAL_CLIENT_SECRET=<sandbox secret>
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=<same sandbox client id>
+```
+
+Then deploy:
+
+```bash
+docker compose --env-file .env -f docker-compose.public.yml up -d --build
+```
+
 ## Debian Production Deployment
 
 On your Debian server with a public IP:
@@ -145,6 +207,13 @@ npm run db:migrate   # Run Prisma migrations
 npm run db:seed      # Seed sample data
 npm run db:studio    # Open Prisma Studio
 npm run extract:product-images -- --pdf "path/to/pricebook.pdf"  # Extract images from PDF
+
+# Public testing (Cloudflare)
+./deploy-public.sh
+# or: docker compose --env-file .env.public -f docker-compose.public.yml up -d --build
+
+# Production (Caddy + own TLS)
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## Project Structure
