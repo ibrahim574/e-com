@@ -22,6 +22,10 @@ export default async function EditProductPage({
     include: {
       categories: true,
       industries: true,
+      signalTypes: true,
+      frequencyBands: true,
+      relatedFrom: true,
+      compatibleFrom: true,
       options: { include: { values: true }, orderBy: { position: "asc" } },
       variants: {
         include: {

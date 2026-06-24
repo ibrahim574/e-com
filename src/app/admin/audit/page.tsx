@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { requireSuperAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
+import { exportAuditLogAction } from "@/app/actions/accounting";
 import type { Prisma } from "@prisma/client";
+import { AuditExportButton } from "@/components/admin/audit-export-button";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,12 @@ const ACTIONS = [
   "DEMOTE",
   "PASSWORD",
   "SETTING",
+  "LOGIN",
+  "REFUND",
+  "INVOICE",
+  "TAX",
+  "EXPENSE",
+  "STOCK",
 ] as const;
 
 const ENTITY_TYPES = [
@@ -25,6 +33,11 @@ const ENTITY_TYPES = [
   "Order",
   "User",
   "SiteSettings",
+  "Expense",
+  "Refund",
+  "Invoice",
+  "TaxRule",
+  "PaymentRecord",
 ] as const;
 
 const PAGE_SIZE = 50;
@@ -38,6 +51,11 @@ const ACTION_COLOR: Record<string, string> = {
   DEMOTE: "bg-amber-50 text-amber-700",
   PASSWORD: "bg-slate-100 text-slate-700",
   SETTING: "bg-slate-100 text-slate-700",
+  REFUND: "bg-rose-50 text-rose-700",
+  INVOICE: "bg-indigo-50 text-indigo-700",
+  TAX: "bg-amber-50 text-amber-700",
+  EXPENSE: "bg-orange-50 text-orange-700",
+  STOCK: "bg-teal-50 text-teal-700",
 };
 
 export default async function AdminAuditPage({
@@ -92,14 +110,16 @@ export default async function AdminAuditPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Audit Log
-        </h1>
-        <p className="mt-1 text-slate-600">
-          Every change made by admins (products, categories, industries, orders,
-          settings, admin user changes). {total} entries.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Audit Log
+          </h1>
+          <p className="mt-1 text-slate-600">
+            Accounting and admin actions. {total} entries.
+          </p>
+        </div>
+        <AuditExportButton exportAction={exportAuditLogAction} />
       </div>
 
       <form
@@ -177,13 +197,14 @@ export default async function AdminAuditPage({
               <th className="px-4 py-3 font-semibold text-slate-700">Action</th>
               <th className="px-4 py-3 font-semibold text-slate-700">Entity</th>
               <th className="px-4 py-3 font-semibold text-slate-700">Summary</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">IP</th>
             </tr>
           </thead>
           <tbody>
             {logs.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={6}
                   className="px-4 py-10 text-center text-slate-500"
                 >
                   No audit entries match these filters.
@@ -207,6 +228,7 @@ export default async function AdminAuditPage({
                   </td>
                   <td className="px-4 py-3 text-slate-700">{log.entityType}</td>
                   <td className="px-4 py-3 text-slate-800">{log.summary}</td>
+                  <td className="px-4 py-3 text-xs text-slate-400">{log.ipAddress ?? "—"}</td>
                 </tr>
               ))
             )}

@@ -1,65 +1,153 @@
 import nodemailer, { type Transporter } from "nodemailer";
 import { SITE_NAME, SITE_EMAIL } from "./constants";
+import { getSiteSettings } from "./site-settings";
+import { decryptSecret } from "./crypto";
+import { redactForLog } from "./sanitize";
 
 let cachedTransporter: Transporter | null = null;
+let cachedConfigKey: string | null = null;
 
-function getTransporter(): Transporter | null {
+async function getSmtpConfig() {
+  const settings = await getSiteSettings();
+
+  if (settings.smtpHost) {
+    let pass: string | undefined;
+    if (settings.smtpPasswordEnc) {
+      try {
+        pass = decryptSecret(settings.smtpPasswordEnc);
+      } catch {
+        pass = undefined;
+      }
+    }
+    return {
+      host: settings.smtpHost,
+      port: settings.smtpPort ?? 587,
+      secure: settings.smtpSecure || (settings.smtpPort ?? 587) === 465,
+      user: settings.smtpUser ?? undefined,
+      pass,
+      from: settings.smtpFrom ?? undefined,
+    };
+  }
+
   const host = process.env.SMTP_HOST;
-
-  if (!host) {
-    return null;
-  }
-
-  if (cachedTransporter) {
-    return cachedTransporter;
-  }
+  if (!host) return null;
 
   const port = Number(process.env.SMTP_PORT ?? 587);
-
-  cachedTransporter = nodemailer.createTransport({
+  return {
     host,
     port,
     secure: process.env.SMTP_SECURE === "true" || port === 465,
-    auth:
-      process.env.SMTP_USER && process.env.SMTP_PASS
-        ? {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          }
-        : undefined,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+    from: process.env.SMTP_FROM,
+  };
+}
+
+async function getTransporter(): Promise<Transporter | null> {
+  const config = await getSmtpConfig();
+  if (!config) return null;
+
+  const configKey = JSON.stringify({
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    from: config.from,
   });
 
+  if (cachedTransporter && cachedConfigKey === configKey) {
+    return cachedTransporter;
+  }
+
+  cachedTransporter = nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    auth:
+      config.user && config.pass
+        ? { user: config.user, pass: config.pass }
+        : undefined,
+  });
+  cachedConfigKey = configKey;
   return cachedTransporter;
 }
 
-function fromAddress() {
+async function fromAddress() {
+  const settings = await getSiteSettings();
+  if (settings.smtpFrom) return settings.smtpFrom;
   return process.env.SMTP_FROM || `${SITE_NAME} <${SITE_EMAIL}>`;
 }
 
 type SendEmailInput = {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
   text: string;
 };
 
-async function sendEmail({ to, subject, html, text }: SendEmailInput) {
-  const transporter = getTransporter();
+export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
+  const transporter = await getTransporter();
 
   if (!transporter) {
     console.info(
       `\n[email] SMTP not configured - logging email instead.\n` +
-        `  To: ${to}\n  Subject: ${subject}\n  ${text}\n`,
+        `  To: ${Array.isArray(to) ? to.join(", ") : to}\n` +
+        `  Subject: ${subject}\n` +
+        `  ${text}\n`,
     );
     return;
   }
 
   await transporter.sendMail({
-    from: fromAddress(),
+    from: await fromAddress(),
     to,
     subject,
     text,
     html,
+  });
+}
+
+type SendEmailWithAttachmentInput = SendEmailInput & {
+  attachmentPath: string;
+  attachmentName: string;
+};
+
+export async function sendEmailWithAttachment({
+  to,
+  subject,
+  html,
+  text,
+  attachmentPath,
+  attachmentName,
+}: SendEmailWithAttachmentInput) {
+  const transporter = await getTransporter();
+
+  if (!transporter) {
+    console.info(
+      `\n[email] SMTP not configured - logging email with attachment.\n` +
+        `  To: ${Array.isArray(to) ? to.join(", ") : to}\n` +
+        `  Subject: ${subject}\n` +
+        `  Attachment: ${attachmentName}\n`,
+    );
+    return;
+  }
+
+  await transporter.sendMail({
+    from: await fromAddress(),
+    to,
+    subject,
+    text,
+    html,
+    attachments: [{ filename: attachmentName, path: attachmentPath }],
+  });
+}
+
+export async function sendTestEmail(to: string) {
+  const settings = await getSiteSettings();
+  await sendEmail({
+    to,
+    subject: `Test email from ${settings.companyName}`,
+    text: "This is a test email from your WirelessCom admin settings.",
+    html: `<p>This is a test email from your <strong>${settings.companyName}</strong> admin settings.</p>`,
   });
 }
 
@@ -100,4 +188,13 @@ export async function sendOtpEmail(to: string, code: string) {
     text: `Your ${SITE_NAME} verification code is ${code}. It expires in 10 minutes.`,
     html: otpEmailHtml(code),
   });
+}
+
+export function invalidateEmailTransporter() {
+  cachedTransporter = null;
+  cachedConfigKey = null;
+}
+
+export function safeLogEmailContext(context: Record<string, unknown>) {
+  console.info("[email]", JSON.stringify(redactForLog(context)));
 }

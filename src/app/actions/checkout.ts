@@ -6,9 +6,16 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateCart, getVariantLabel } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
-import { getShippingCents } from "@/lib/constants";
+import { getShippingCentsForCountry } from "@/lib/shipping";
+import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
 import { generateOrderNumber } from "@/lib/utils";
 import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
+import {
+  onOrderPaid,
+  onOrderPaidInTransaction,
+  recordPaymentPending,
+  markPaymentFailed,
+} from "@/lib/accounting/on-order-paid";
 
 export async function createCheckoutOrderAction(formData: FormData) {
   const session = await auth();
@@ -45,6 +52,8 @@ export async function createCheckoutOrderAction(formData: FormData) {
     sku: string | null;
     quantity: number;
     unitPriceCents: number;
+    txFrequency: string | null;
+    rxFrequency: string | null;
   }> = [];
 
   for (const item of cart.items) {
@@ -74,11 +83,19 @@ export async function createCheckoutOrderAction(formData: FormData) {
       sku: item.variant?.sku ?? null,
       quantity: item.quantity,
       unitPriceCents: pricing.currentCents,
+      txFrequency: item.txFrequency || null,
+      rxFrequency: item.rxFrequency || null,
     });
   }
 
-  const shippingCents = getShippingCents(subtotalCents, currency);
-  const totalCents = subtotalCents + shippingCents;
+  const shippingCents = await getShippingCentsForCountry(
+    subtotalCents,
+    shippingCountry,
+    currency,
+  );
+  const taxRules = await resolveTaxRules(shippingCountry, shippingState);
+  const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);
+  const totalCents = subtotalCents + shippingCents + tax.taxCents;
   const orderNumber = generateOrderNumber();
 
   const order = await prisma.order.create({
@@ -89,6 +106,9 @@ export async function createCheckoutOrderAction(formData: FormData) {
       currency,
       subtotalCents,
       shippingCents,
+      taxCents: tax.taxCents,
+      taxLabel: tax.taxLabel || null,
+      taxRatePercent: tax.taxRatePercent || null,
       totalCents,
       shippingName,
       shippingLine1,
@@ -101,6 +121,12 @@ export async function createCheckoutOrderAction(formData: FormData) {
         create: orderItems,
       },
     },
+  });
+
+  await recordPaymentPending(prisma, {
+    id: order.id,
+    shippingName,
+    totalCents,
   });
 
   try {
@@ -121,6 +147,7 @@ export async function createCheckoutOrderAction(formData: FormData) {
       where: { id: order.id },
       data: { status: "CANCELLED" },
     });
+    await markPaymentFailed(order.id);
     return { error: "Unable to initialize PayPal checkout. Check PayPal credentials." };
   }
 }
@@ -169,6 +196,8 @@ export async function captureCheckoutOrderAction(orderId: string, paypalOrderId:
         }
       }
 
+      await onOrderPaidInTransaction(tx, order.id, capture.captureId);
+
       const cart = await tx.cart.findFirst({
         where: order.userId ? { userId: order.userId } : undefined,
       });
@@ -177,6 +206,8 @@ export async function captureCheckoutOrderAction(orderId: string, paypalOrderId:
         await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
       }
     });
+
+    await onOrderPaid(order.id);
 
     revalidatePath("/cart");
     revalidatePath("/", "layout");
@@ -191,4 +222,5 @@ export async function cancelCheckoutOrderAction(orderId: string) {
     where: { id: orderId, status: "PENDING" },
     data: { status: "CANCELLED" },
   });
+  await markPaymentFailed(orderId);
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Radio,
   Phone,
@@ -177,15 +178,43 @@ export function Footer({ dualCurrency = true }: { dualCurrency?: boolean } = {})
         </div>
       </div>
 
+      <div className="border-t border-slate-200 bg-white">
+        <div className="container-page py-6">
+          <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Secure Payments
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            {[
+              { src: "/payment/visa.svg", alt: "Visa", w: 48, h: 16 },
+              { src: "/payment/mastercard.svg", alt: "Mastercard", w: 40, h: 26 },
+              { src: "/payment/paypal.svg", alt: "PayPal", w: 48, h: 14 },
+            ].map((logo) => (
+              <Image
+                key={logo.alt}
+                src={logo.src}
+                alt={logo.alt}
+                width={logo.w}
+                height={logo.h}
+                className="h-7 w-auto grayscale transition hover:grayscale-0"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="border-t border-slate-200">
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-xs text-slate-500 sm:flex-row">
-          <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p>© {new Date().getFullYear()} {SITE_NAME}. All rights reserved.</p>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 ring-1 ring-red-100">
+              <span aria-hidden>🍁</span> Proudly Canadian
+            </span>
+          </div>
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/shipping" className="transition hover:text-blue-600">Shipping</Link>
             <Link href="/contact" className="transition hover:text-blue-600">Contact</Link>
-            <span>
-              We accept {PAYMENT_METHODS.join(", ")} · {dualCurrency ? "CAD / USD" : "CAD"}
-            </span>
+            <Link href="/stay-connected" className="transition hover:text-blue-600">Get a Quote</Link>
+            <span>{dualCurrency ? "CAD / USD" : "CAD"}</span>
           </div>
         </div>
       </div>

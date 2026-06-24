@@ -3,7 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { changeAdminPasswordAction } from "@/app/actions/admin-users";
 import { Button } from "@/components/ui/button";
-import { Input, Label } from "@/components/ui/input";
+import { Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function ChangePasswordForm() {
   const [error, setError] = useState<string | null>(null);
@@ -38,19 +39,17 @@ export function ChangePasswordForm() {
       <div className="mt-5 space-y-4">
         <div>
           <Label htmlFor="currentPassword">Current password</Label>
-          <Input
+          <PasswordInput
             id="currentPassword"
             name="currentPassword"
-            type="password"
             required
           />
         </div>
         <div>
           <Label htmlFor="newPassword">New password</Label>
-          <Input
+          <PasswordInput
             id="newPassword"
             name="newPassword"
-            type="password"
             minLength={8}
             required
           />
@@ -58,10 +57,9 @@ export function ChangePasswordForm() {
         </div>
         <div>
           <Label htmlFor="confirmPassword">Confirm new password</Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
             minLength={8}
             required
           />

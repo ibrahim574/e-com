@@ -4,6 +4,7 @@ import { useState } from "react";
 import { adminLoginAction } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" name="password" type="password" required />
+            <PasswordInput id="password" name="password" required />
           </div>
           {error && <p className="text-sm text-blue-600">{error}</p>}
           <Button type="submit" className="w-full">

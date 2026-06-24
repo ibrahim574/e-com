@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getCart } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
-import { getShippingCents } from "@/lib/constants";
+import { getShippingCentsForCountry } from "@/lib/shipping";
+import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
 
 export default async function CheckoutPage() {
   const session = await auth();
@@ -23,9 +24,6 @@ export default async function CheckoutPage() {
     subtotalCents += pricing.currentCents * item.quantity;
   }
 
-  const shippingCents = getShippingCents(subtotalCents, currency);
-  const totalCents = subtotalCents + shippingCents;
-
   const profile = session?.user?.id
     ? await prisma.user.findUnique({
         where: { id: session.user.id },
@@ -42,6 +40,19 @@ export default async function CheckoutPage() {
       })
     : null;
 
+  const defaultCountry =
+    profile?.addressCountry ?? (currency === "CAD" ? "CA" : "US");
+  const defaultState = profile?.addressState ?? "ON";
+
+  const shippingCents = await getShippingCentsForCountry(
+    subtotalCents,
+    defaultCountry,
+    currency,
+  );
+  const taxRules = await resolveTaxRules(defaultCountry, defaultState);
+  const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);
+  const totalCents = subtotalCents + shippingCents + tax.taxCents;
+
   return (
     <div className="container-page py-10">
       <h1 className="section-title">Checkout</h1>
@@ -50,6 +61,8 @@ export default async function CheckoutPage() {
           currency={currency}
           subtotalCents={subtotalCents}
           shippingCents={shippingCents}
+          taxCents={tax.taxCents}
+          taxLabel={tax.taxLabel}
           totalCents={totalCents}
           isLoggedIn={!!session?.user}
           userEmail={session?.user?.email}
@@ -58,10 +71,9 @@ export default async function CheckoutPage() {
             line1: profile?.addressLine1 ?? "",
             line2: profile?.addressLine2 ?? "",
             city: profile?.addressCity ?? "",
-            state: profile?.addressState ?? "",
+            state: defaultState,
             postal: profile?.addressPostal ?? "",
-            country:
-              profile?.addressCountry ?? (currency === "CAD" ? "CA" : "US"),
+            country: defaultCountry,
           }}
           paypalClientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? ""}
         />

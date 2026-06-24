@@ -15,7 +15,12 @@ export type AuditAction =
   | "DEMOTE"
   | "PASSWORD"
   | "SETTING"
-  | "LOGIN";
+  | "LOGIN"
+  | "REFUND"
+  | "INVOICE"
+  | "TAX"
+  | "EXPENSE"
+  | "STOCK";
 
 export type AuditEntityType =
   | "Product"
@@ -25,19 +30,25 @@ export type AuditEntityType =
   | "Industry"
   | "Order"
   | "User"
-  | "SiteSettings";
+  | "SiteSettings"
+  | "Expense"
+  | "Refund"
+  | "Invoice"
+  | "TaxRule"
+  | "PaymentRecord";
 
 export type RecordAuditInput = {
-  actor: AuditActor;
+  actor?: AuditActor | null;
   action: AuditAction;
   entityType: AuditEntityType;
   entityId?: string | null;
   summary: string;
   metadata?: Prisma.InputJsonValue;
+  ipAddress?: string | null;
+  previousValue?: Prisma.InputJsonValue;
+  newValue?: Prisma.InputJsonValue;
 };
 
-/** Write an audit log entry. Fire-and-forget safe: errors are logged but never
- * thrown — auditing failures must not break user-visible flows. */
 export async function recordAudit({
   actor,
   action,
@@ -45,17 +56,23 @@ export async function recordAudit({
   entityId,
   summary,
   metadata,
+  ipAddress,
+  previousValue,
+  newValue,
 }: RecordAuditInput) {
   try {
     await prisma.auditLog.create({
       data: {
-        actorId: actor.id,
-        actorEmail: actor.email,
+        actorId: actor?.id ?? null,
+        actorEmail: actor?.email ?? "system",
         action,
         entityType,
         entityId: entityId ?? null,
         summary,
         metadata: metadata ?? Prisma.JsonNull,
+        ipAddress: ipAddress ?? null,
+        previousValue: previousValue ?? Prisma.JsonNull,
+        newValue: newValue ?? Prisma.JsonNull,
       },
     });
   } catch (err) {

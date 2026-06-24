@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { addToCartAction } from "@/app/actions/cart";
 import { QuantitySelector } from "@/components/products/quantity-selector";
+import { PreOrderModal } from "@/components/products/pre-order-modal";
+import Link from "next/link";
+import { Input, Label } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
 import {
   getProductPrice,
@@ -61,6 +64,10 @@ type ProductDetailClientProps = {
     priceUsdCents: number;
     saleCadCents?: number | null;
     saleUsdCents?: number | null;
+    frequencyOptions?: string[];
+    allowCustomFrequency?: boolean;
+    customTxRequired?: boolean;
+    customRxRequired?: boolean;
   };
   options: Option[];
   variants: Variant[];
@@ -83,6 +90,20 @@ export function ProductDetailClient({
   const [added, setAdded] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [tab, setTab] = useState<TabKey>("details");
+  const [selectedFrequency, setSelectedFrequency] = useState("");
+  const [txFrequency, setTxFrequency] = useState("");
+  const [rxFrequency, setRxFrequency] = useState("");
+  const [preOrderOpen, setPreOrderOpen] = useState(false);
+
+  const frequencyChoices = useMemo(() => {
+    const opts = [...(product.frequencyOptions ?? [])];
+    if (product.allowCustomFrequency && !opts.includes("Custom Frequency")) {
+      opts.push("Custom Frequency");
+    }
+    return opts;
+  }, [product.frequencyOptions, product.allowCustomFrequency]);
+
+  const isCustomFrequency = selectedFrequency === "Custom Frequency";
 
   const selectedVariant = useMemo(() => {
     if (!product.hasVariants || !variants.length) return null;
@@ -111,7 +132,14 @@ export function ProductDetailClient({
       ? selectedVariant.stock > 0
       : false
     : product.stock > 0;
-  const canAdd = allOptionsChosen && inStock && (!product.hasVariants || selectedVariant);
+  const canAdd =
+    allOptionsChosen &&
+    inStock &&
+    (!product.hasVariants || selectedVariant) &&
+    (!frequencyChoices.length || selectedFrequency) &&
+    (!isCustomFrequency ||
+      ((!product.customTxRequired || txFrequency.trim()) &&
+        (!product.customRxRequired || rxFrequency.trim())));
   const maxQuantity = product.hasVariants
     ? (selectedVariant?.stock ?? 1)
     : product.stock;
@@ -146,6 +174,11 @@ export function ProductDetailClient({
     formData.set("productId", product.id);
     if (selectedVariant) formData.set("variantId", selectedVariant.id);
     formData.set("quantity", String(quantity));
+    if (selectedFrequency) formData.set("selectedFrequency", selectedFrequency);
+    if (isCustomFrequency) {
+      formData.set("txFrequency", txFrequency.trim());
+      formData.set("rxFrequency", rxFrequency.trim());
+    }
     await addToCartAction(formData);
     setPending(false);
     setAdded(true);
@@ -290,6 +323,53 @@ export function ProductDetailClient({
             ))}
           </div>
 
+          {frequencyChoices.length > 0 && (
+            <div className="mt-5">
+              <Label htmlFor="frequency-select">Frequency</Label>
+              <select
+                id="frequency-select"
+                value={selectedFrequency}
+                onChange={(e) => setSelectedFrequency(e.target.value)}
+                className="mt-2 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+              >
+                <option value="">Select frequency</option>
+                {frequencyChoices.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+              {isCustomFrequency && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="tx-freq">
+                      TX Frequency{product.customTxRequired ? " *" : ""}
+                    </Label>
+                    <Input
+                      id="tx-freq"
+                      value={txFrequency}
+                      onChange={(e) => setTxFrequency(e.target.value)}
+                      placeholder="e.g. 462.5625 MHz"
+                      required={product.customTxRequired}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="rx-freq">
+                      RX Frequency{product.customRxRequired ? " *" : ""}
+                    </Label>
+                    <Input
+                      id="rx-freq"
+                      value={rxFrequency}
+                      onChange={(e) => setRxFrequency(e.target.value)}
+                      placeholder="e.g. 462.5625 MHz"
+                      required={product.customRxRequired}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quantity + Add to cart */}
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-end">
             <QuantitySelector
@@ -319,11 +399,37 @@ export function ProductDetailClient({
                 "Select Options Above"
               ) : !inStock ? (
                 "Out of Stock"
+              ) : frequencyChoices.length && !selectedFrequency ? (
+                "Select Frequency"
               ) : (
                 "Add to Cart"
               )}
             </button>
           </div>
+
+          {!inStock && allOptionsChosen && (
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setPreOrderOpen(true)}
+                className="flex h-11 flex-1 items-center justify-center rounded-lg border-2 border-blue-600 text-sm font-bold text-blue-600 hover:bg-blue-50"
+              >
+                Pre-Order
+              </button>
+              <Link
+                href={`/stay-connected?product=${encodeURIComponent(product.name)}`}
+                className="flex h-11 flex-1 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white hover:bg-slate-800"
+              >
+                Get a Quote
+              </Link>
+            </div>
+          )}
+
+          <PreOrderModal
+            productName={product.name}
+            open={preOrderOpen}
+            onClose={() => setPreOrderOpen(false)}
+          />
 
           {selectedVariant && (
             <p className="mt-3 text-sm text-slate-500">

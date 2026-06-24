@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   captureCheckoutOrderAction,
   cancelCheckoutOrderAction,
 } from "@/app/actions/checkout";
+import { previewTaxAction } from "@/app/actions/tax";
 import { formatPrice } from "@/lib/utils";
 
 declare global {
@@ -38,6 +39,8 @@ type CheckoutClientProps = {
   currency: "CAD" | "USD";
   subtotalCents: number;
   shippingCents: number;
+  taxCents: number;
+  taxLabel: string;
   totalCents: number;
   isLoggedIn: boolean;
   userEmail?: string | null;
@@ -49,8 +52,10 @@ type CheckoutClientProps = {
 export function CheckoutClient({
   currency,
   subtotalCents,
-  shippingCents,
-  totalCents,
+  shippingCents: initialShipping,
+  taxCents: initialTax,
+  taxLabel: initialTaxLabel,
+  totalCents: initialTotal,
   isLoggedIn,
   userEmail,
   userName,
@@ -63,6 +68,28 @@ export function CheckoutClient({
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const [shippingCents, setShippingCents] = useState(initialShipping);
+  const [taxCents, setTaxCents] = useState(initialTax);
+  const [taxLabel, setTaxLabel] = useState(initialTaxLabel);
+  const [totalCents, setTotalCents] = useState(initialTotal);
+
+  const recalcTotals = useCallback(async () => {
+    if (!formRef.current) return;
+    const fd = new FormData(formRef.current);
+    const country = String(fd.get("shippingCountry") ?? "CA");
+    const province = String(fd.get("shippingState") ?? "");
+    const result = await previewTaxAction({
+      subtotalCents,
+      country,
+      province,
+      currency,
+    });
+    setShippingCents(result.shippingCents);
+    setTaxCents(result.taxCents);
+    setTaxLabel(result.taxLabel);
+    setTotalCents(result.totalCents);
+  }, [subtotalCents, currency]);
 
   useEffect(() => {
     if (!paypalClientId) return;
@@ -124,7 +151,11 @@ export function CheckoutClient({
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
-      <form ref={formRef} className="space-y-4 lg:col-span-2">
+      <form
+        ref={formRef}
+        className="space-y-4 lg:col-span-2"
+        onChange={() => void recalcTotals()}
+      >
         <h2 className="text-xl font-bold">Shipping Information</h2>
 
         {!isLoggedIn && (
@@ -233,6 +264,12 @@ export function CheckoutClient({
               {shippingCents === 0 ? "FREE" : formatPrice(shippingCents, currency)}
             </span>
           </div>
+          {taxCents > 0 && (
+            <div className="flex justify-between">
+              <span>{taxLabel}</span>
+              <span>{formatPrice(taxCents, currency)}</span>
+            </div>
+          )}
           <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
             <span>Total</span>
             <span>{formatPrice(totalCents, currency)}</span>

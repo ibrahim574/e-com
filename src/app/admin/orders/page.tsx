@@ -16,16 +16,36 @@ function isOrderStatus(value: string | undefined): value is OrderStatus {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; from?: string; to?: string }>;
 }) {
   await requireAdmin();
 
-  const { status } = await searchParams;
+  const { status, q = "", from = "", to = "" } = await searchParams;
   const activeStatus = isOrderStatus(status) ? status : null;
+  const query = q.trim();
 
-  const where: Prisma.OrderWhereInput = activeStatus
-    ? { status: activeStatus }
-    : {};
+  const where: Prisma.OrderWhereInput = {
+    deletedAt: null,
+    ...(activeStatus ? { status: activeStatus } : {}),
+    ...(query
+      ? {
+          OR: [
+            { orderNumber: { contains: query, mode: "insensitive" } },
+            { guestEmail: { contains: query, mode: "insensitive" } },
+            { shippingName: { contains: query, mode: "insensitive" } },
+            { user: { email: { contains: query, mode: "insensitive" } } },
+          ],
+        }
+      : {}),
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from ? { gte: new Date(from) } : {}),
+            ...(to ? { lte: new Date(`${to}T23:59:59`) } : {}),
+          },
+        }
+      : {}),
+  };
 
   const [orders, statusGroups, totalCount] = await Promise.all([
     prisma.order.findMany({
@@ -94,6 +114,34 @@ export default async function AdminOrdersPage({
         })}
       </div>
 
+      <form className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white p-4">
+        <input
+          name="q"
+          defaultValue={query}
+          placeholder="Search order #, customer..."
+          className="h-10 flex-1 min-w-[200px] rounded-md border border-slate-200 px-3 text-sm"
+        />
+        <input
+          name="from"
+          type="date"
+          defaultValue={from}
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm"
+        />
+        <input
+          name="to"
+          type="date"
+          defaultValue={to}
+          className="h-10 rounded-md border border-slate-200 px-3 text-sm"
+        />
+        {activeStatus && <input type="hidden" name="status" value={activeStatus} />}
+        <button
+          type="submit"
+          className="h-10 rounded-md bg-slate-900 px-4 text-sm font-medium text-white"
+        >
+          Filter
+        </button>
+      </form>
+
       <div className="space-y-4">
         {orders.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 p-12 text-center text-slate-500">
@@ -102,16 +150,31 @@ export default async function AdminOrdersPage({
         ) : (
           orders.map((order) => {
             const itemCount = order.items.reduce((s, i) => s + i.quantity, 0);
+            const isOverdue =
+              order.status === "PENDING" &&
+              Date.now() - order.createdAt.getTime() > 3 * 24 * 60 * 60 * 1000;
             return (
               <div
                 key={order.id}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                className={`rounded-2xl border bg-white p-6 shadow-sm ${
+                  isOverdue ? "border-amber-300 bg-amber-50/30" : "border-slate-200"
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-3">
-                      <p className="text-lg font-bold text-slate-900">{order.orderNumber}</p>
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="text-lg font-bold text-slate-900 hover:text-blue-600"
+                      >
+                        {order.orderNumber}
+                      </Link>
                       <OrderStatusBadge status={order.status} />
+                      {isOverdue && (
+                        <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-800">
+                          Overdue
+                        </span>
+                      )}
                     </div>
                     <p className="mt-1 text-sm text-slate-500">
                       {order.user?.email ?? order.guestEmail ?? "Guest"} ·{" "}
@@ -180,6 +243,10 @@ export default async function AdminOrdersPage({
                             ? "FREE"
                             : formatPrice(order.shippingCents, order.currency)}
                         </span>
+                      </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Tax</span>
+                        <span>{formatPrice(order.taxCents, order.currency)}</span>
                       </div>
                     </div>
                   </div>

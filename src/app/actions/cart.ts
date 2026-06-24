@@ -26,6 +26,8 @@ export async function addToCartAction(formData: FormData) {
     ? String(formData.get("variantId"))
     : null;
   const requested = Math.max(1, Number(formData.get("quantity") ?? 1));
+  const txFrequency = String(formData.get("txFrequency") ?? "").trim();
+  const rxFrequency = String(formData.get("rxFrequency") ?? "").trim();
   const stockLimit = await getStockLimit(productId, variantId);
   if (stockLimit <= 0) return;
 
@@ -36,6 +38,8 @@ export async function addToCartAction(formData: FormData) {
       cartId: cart.id,
       productId,
       variantId: variantId ?? null,
+      txFrequency,
+      rxFrequency,
     },
   });
 
@@ -56,6 +60,8 @@ export async function addToCartAction(formData: FormData) {
         productId,
         variantId,
         quantity: Math.min(requested, stockLimit),
+        txFrequency,
+        rxFrequency,
       },
     });
   }

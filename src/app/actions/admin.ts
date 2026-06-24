@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,8 @@ import {
   deleteProductImageFile,
   saveProductImageFile,
 } from "@/lib/product-images";
+import { isLoginLocked, recordLoginAttempt } from "@/lib/login-lockout";
+import { getClientIp } from "@/lib/rate-limit";
 import { ProductStatus, OrderStatus } from "@prisma/client";
 
 export type ProductImageActionResult =
@@ -24,6 +27,7 @@ const ORDER_STATUSES: OrderStatus[] = [
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
+  "REFUNDED",
 ];
 
 export async function updateOrderStatusAction(formData: FormData) {
@@ -129,8 +133,28 @@ export async function saveProductAction(formData: FormData) {
     : null;
   const hasVariants = formData.get("hasVariants") === "on";
   const stock = Math.max(0, Math.round(Number(formData.get("stock") ?? 0)));
+  const purchaseCostCentsRaw = formData.get("purchaseCostCents");
+  const purchaseCostCents = purchaseCostCentsRaw
+    ? Math.round(Number(purchaseCostCentsRaw) * 100)
+    : null;
+  const lowStockThreshold = Math.max(
+    0,
+    Math.round(Number(formData.get("lowStockThreshold") ?? 5)),
+  );
   const categoryIds = formData.getAll("categoryIds").map(String);
   const industryIds = formData.getAll("industryIds").map(String);
+  const seriesId = String(formData.get("seriesId") ?? "").trim() || null;
+  const frequencyOptions = String(formData.get("frequencyOptions") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const allowCustomFrequency = formData.get("allowCustomFrequency") === "on";
+  const customTxRequired = formData.get("customTxRequired") === "on";
+  const customRxRequired = formData.get("customRxRequired") === "on";
+  const signalTypeIds = formData.getAll("signalTypeIds").map(String);
+  const frequencyBandIds = formData.getAll("frequencyBandIds").map(String);
+  const relatedProductIds = formData.getAll("relatedProductIds").map(String);
+  const compatibleProductIds = formData.getAll("compatibleProductIds").map(String);
 
   const data = {
     name,
@@ -149,13 +173,44 @@ export async function saveProductAction(formData: FormData) {
     saleUsdCents,
     hasVariants,
     stock,
+    purchaseCostCents,
+    lowStockThreshold,
+    seriesId,
+    frequencyOptions,
+    allowCustomFrequency,
+    customTxRequired,
+    customRxRequired,
   };
 
   let productId = id;
   let isCreate = false;
 
   if (id) {
+    const before = await prisma.product.findUnique({
+      where: { id },
+      select: { stock: true, name: true },
+    });
     await prisma.product.update({ where: { id }, data });
+    if (before && before.stock !== stock) {
+      const { logInventoryMovement } = await import("@/lib/inventory-movement");
+      await logInventoryMovement(prisma, {
+        productId: id,
+        productName: before.name,
+        changeType: "MANUAL_ADJUSTMENT",
+        qtyBefore: before.stock,
+        qtyAfter: stock,
+        changedById: actor.id,
+      });
+      await recordAudit({
+        actor,
+        action: "STOCK",
+        entityType: "Product",
+        entityId: id,
+        summary: `Stock changed from ${before.stock} to ${stock}`,
+        previousValue: { stock: before.stock },
+        newValue: { stock },
+      });
+    }
   } else {
     const product = await prisma.product.create({ data });
     productId = product.id;
@@ -175,6 +230,42 @@ export async function saveProductAction(formData: FormData) {
     if (industryIds.length) {
       await prisma.productIndustry.createMany({
         data: industryIds.map((industryId) => ({ productId, industryId })),
+      });
+    }
+
+    await prisma.productSignalType.deleteMany({ where: { productId } });
+    if (signalTypeIds.length) {
+      await prisma.productSignalType.createMany({
+        data: signalTypeIds.map((signalTypeId) => ({ productId, signalTypeId })),
+      });
+    }
+
+    await prisma.productFrequencyBand.deleteMany({ where: { productId } });
+    if (frequencyBandIds.length) {
+      await prisma.productFrequencyBand.createMany({
+        data: frequencyBandIds.map((frequencyBandId) => ({ productId, frequencyBandId })),
+      });
+    }
+
+    await prisma.relatedProduct.deleteMany({ where: { productId } });
+    if (relatedProductIds.length) {
+      await prisma.relatedProduct.createMany({
+        data: relatedProductIds.map((relatedProductId, i) => ({
+          productId,
+          relatedProductId,
+          position: i,
+        })),
+      });
+    }
+
+    await prisma.compatibleProduct.deleteMany({ where: { productId } });
+    if (compatibleProductIds.length) {
+      await prisma.compatibleProduct.createMany({
+        data: compatibleProductIds.map((compatibleProductId, i) => ({
+          productId,
+          compatibleProductId,
+          position: i,
+        })),
       });
     }
 
@@ -370,6 +461,10 @@ export async function saveVariantAction(formData: FormData) {
   let resolvedVariantId: string;
 
   if (variantId) {
+    const before = await prisma.productVariant.findUnique({
+      where: { id: variantId },
+      include: { product: { select: { name: true } } },
+    });
     await prisma.productVariant.update({
       where: { id: variantId },
       data: {
@@ -382,6 +477,19 @@ export async function saveVariantAction(formData: FormData) {
         image,
       },
     });
+    if (before && before.stock !== stock) {
+      const { logInventoryMovement } = await import("@/lib/inventory-movement");
+      await logInventoryMovement(prisma, {
+        productId,
+        variantId,
+        productName: before.product.name,
+        sku,
+        changeType: "MANUAL_ADJUSTMENT",
+        qtyBefore: before.stock,
+        qtyAfter: stock,
+        changedById: actor.id,
+      });
+    }
     resolvedVariantId = variantId;
   } else {
     const variant = await prisma.productVariant.create({
@@ -460,19 +568,167 @@ export async function saveProductOptionAction(formData: FormData) {
   redirect(`/admin/products/${productId}/edit?option=${option.id}`);
 }
 
+export async function generateVariantMatrixAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const productId = String(formData.get("productId"));
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    include: {
+      options: { include: { values: true }, orderBy: { position: "asc" } },
+      variants: { include: { options: true } },
+    },
+  });
+  if (!product || product.options.length === 0) {
+    return;
+  }
+
+  const valueGroups = product.options.map((o) => o.values);
+  const combos: string[][] = [];
+
+  function buildCombo(depth: number, current: string[]) {
+    if (depth === valueGroups.length) {
+      combos.push([...current]);
+      return;
+    }
+    for (const val of valueGroups[depth]) {
+      current.push(val.id);
+      buildCombo(depth + 1, current);
+      current.pop();
+    }
+  }
+  buildCombo(0, []);
+
+  const existingSets = new Set(
+    product.variants.map((v) =>
+      v.options
+        .map((o) => o.optionValueId)
+        .sort()
+        .join(","),
+    ),
+  );
+
+  let created = 0;
+  for (const combo of combos) {
+    const key = [...combo].sort().join(",");
+    if (existingSets.has(key)) continue;
+
+    const labels = combo.map((valueId) => {
+      for (const opt of product.options) {
+        const val = opt.values.find((v) => v.id === valueId);
+        if (val) return val.value.slice(0, 3).toUpperCase();
+      }
+      return "VAR";
+    });
+    const sku = `${product.slug.slice(0, 8).toUpperCase()}-${labels.join("-")}-${created + 1}`;
+
+    await prisma.productVariant.create({
+      data: {
+        productId,
+        sku,
+        stock: 0,
+        options: {
+          create: combo.map((optionValueId) => ({ optionValueId })),
+        },
+      },
+    });
+    created++;
+  }
+
+  await recordAudit({
+    actor,
+    action: "CREATE",
+    entityType: "ProductVariant",
+    entityId: productId,
+    summary: `Generated ${created} variant combinations`,
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+}
+
+export async function bulkDeleteProductsAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const ids = formData.getAll("productIds").map(String);
+  if (!ids.length) return { error: "No products selected." };
+  await prisma.product.deleteMany({ where: { id: { in: ids } } });
+  await recordAudit({
+    actor,
+    action: "DELETE",
+    entityType: "Product",
+    summary: `Bulk deleted ${ids.length} products`,
+  });
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
+export async function bulkSetProductStatusAction(formData: FormData) {
+  const actor = await getActorOrThrow();
+  const ids = formData.getAll("productIds").map(String);
+  const status = formData.get("status") as ProductStatus;
+  if (!ids.length) return { error: "No products selected." };
+  await prisma.product.updateMany({
+    where: { id: { in: ids } },
+    data: { status },
+  });
+  await recordAudit({
+    actor,
+    action: "UPDATE",
+    entityType: "Product",
+    summary: `Bulk set ${ids.length} products to ${status}`,
+  });
+  revalidatePath("/admin/products");
+  return { success: true };
+}
+
 export async function adminLoginAction(formData: FormData) {
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const password = String(formData.get("password") ?? "");
+  const hdrs = await headers();
+  const ip = getClientIp(hdrs);
+
+  if (await isLoginLocked(email, ip)) {
+    return {
+      error: "Too many failed login attempts. Please try again in 15 minutes.",
+    };
+  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !isAdminRole(user.role)) {
+    await recordLoginAttempt(email, ip, false);
+    await recordAudit({
+      actor: null,
+      action: "LOGIN",
+      entityType: "User",
+      entityId: null,
+      summary: `Failed admin login for ${email}`,
+      metadata: { ip, success: false },
+    });
     return { error: "Invalid admin credentials." };
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    await recordLoginAttempt(email, ip, false);
+    await recordAudit({
+      actor: null,
+      action: "LOGIN",
+      entityType: "User",
+      entityId: user.id,
+      summary: `Failed admin login for ${email}`,
+      metadata: { ip, success: false },
+    });
     return { error: "Invalid admin credentials." };
   }
+
+  await recordLoginAttempt(email, ip, true);
+  await recordAudit({
+    actor: { id: user.id, email: user.email },
+    action: "LOGIN",
+    entityType: "User",
+    entityId: user.id,
+    summary: `Admin login: ${email}`,
+    metadata: { ip, success: true },
+  });
 
   const { signIn } = await import("@/lib/auth");
   await signIn("credentials", {

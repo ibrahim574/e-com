@@ -41,3 +41,6 @@ prisma/*.db-journal
 # Uploaded product images (keep directory via .gitkeep)
 public/products/uploads/*
 !public/products/uploads/.gitkeep
+
+# Private accounting uploads (invoices, expenses)
+uploads/

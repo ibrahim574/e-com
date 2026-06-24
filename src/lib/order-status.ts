@@ -7,6 +7,7 @@ export const ORDER_STATUS_LIST: OrderStatus[] = [
   "SHIPPED",
   "DELIVERED",
   "CANCELLED",
+  "REFUNDED",
 ];
 
 type StatusMeta = {
@@ -47,6 +48,11 @@ export const ORDER_STATUS_META: Record<OrderStatus, StatusMeta> = {
     label: "Cancelled",
     badge: "bg-rose-100 text-rose-700",
     dot: "bg-rose-500",
+  },
+  REFUNDED: {
+    label: "Refunded",
+    badge: "bg-purple-100 text-purple-700",
+    dot: "bg-purple-500",
   },
 };
 

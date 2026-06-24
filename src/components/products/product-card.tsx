@@ -38,6 +38,7 @@ export function ProductCard({ product, currency }: ProductCardProps) {
           src={image}
           alt={product.name}
           fill
+          loading="lazy"
           className="object-contain p-5 transition duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, 25vw"
         />

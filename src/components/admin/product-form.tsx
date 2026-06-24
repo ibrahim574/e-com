@@ -1,5 +1,6 @@
 import { saveProductAction } from "@/app/actions/admin";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
+import { TagInput } from "@/components/admin/tag-input";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { prisma } from "@/lib/prisma";
@@ -23,22 +24,54 @@ type ProductFormProps = {
     saleUsdCents?: number | null;
     hasVariants: boolean;
     stock: number;
+    purchaseCostCents: number | null;
+    lowStockThreshold: number;
+    seriesId?: string | null;
+    frequencyOptions?: string[];
+    allowCustomFrequency?: boolean;
+    customTxRequired?: boolean;
+    customRxRequired?: boolean;
     categories: Array<{ categoryId: string }>;
     industries: Array<{ industryId: string }>;
+    signalTypes?: Array<{ signalTypeId: string }>;
+    frequencyBands?: Array<{ frequencyBandId: string }>;
+    relatedFrom?: Array<{ relatedProductId: string }>;
+    compatibleFrom?: Array<{ compatibleProductId: string }>;
   };
 };
 
 export async function ProductForm({ product }: ProductFormProps) {
-  const [categories, industries] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.industry.findMany({ orderBy: { name: "asc" } }),
-  ]);
+  const [categories, industries, seriesList, signalTypes, frequencyBands, allProducts] =
+    await Promise.all([
+      prisma.category.findMany({ orderBy: { name: "asc" } }),
+      prisma.industry.findMany({ orderBy: { name: "asc" } }),
+      prisma.series.findMany({ orderBy: { name: "asc" } }),
+      prisma.signalType.findMany({ orderBy: { name: "asc" } }),
+      prisma.frequencyBand.findMany({ orderBy: { name: "asc" } }),
+      prisma.product.findMany({
+        where: product ? { id: { not: product.id } } : undefined,
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      }),
+    ]);
 
   const selectedCategoryIds = new Set(
     product?.categories.map((c) => c.categoryId) ?? [],
   );
   const selectedIndustryIds = new Set(
     product?.industries.map((i) => i.industryId) ?? [],
+  );
+  const selectedSignalTypeIds = new Set(
+    product?.signalTypes?.map((s) => s.signalTypeId) ?? [],
+  );
+  const selectedBandIds = new Set(
+    product?.frequencyBands?.map((b) => b.frequencyBandId) ?? [],
+  );
+  const selectedRelatedIds = new Set(
+    product?.relatedFrom?.map((r) => r.relatedProductId) ?? [],
+  );
+  const selectedCompatibleIds = new Set(
+    product?.compatibleFrom?.map((c) => c.compatibleProductId) ?? [],
   );
 
   return (
@@ -169,6 +202,32 @@ export async function ProductForm({ product }: ProductFormProps) {
             For simple products without variants. If &quot;Has Variants&quot; is checked, set stock on each variant below.
           </p>
         </div>
+        <div>
+          <Label htmlFor="purchaseCostCents">Purchase cost (CAD $)</Label>
+          <Input
+            id="purchaseCostCents"
+            name="purchaseCostCents"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={
+              product?.purchaseCostCents != null
+                ? (product.purchaseCostCents / 100).toFixed(2)
+                : ""
+            }
+          />
+        </div>
+        <div>
+          <Label htmlFor="lowStockThreshold">Low stock threshold</Label>
+          <Input
+            id="lowStockThreshold"
+            name="lowStockThreshold"
+            type="number"
+            min="0"
+            step="1"
+            defaultValue={product?.lowStockThreshold ?? 5}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-6">
@@ -227,6 +286,124 @@ export async function ProductForm({ product }: ProductFormProps) {
                   defaultChecked={selectedIndustryIds.has(industry.id)}
                 />
                 {industry.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <Label htmlFor="seriesId">Product Series</Label>
+          <Select id="seriesId" name="seriesId" defaultValue={product?.seriesId ?? ""}>
+            <option value="">None</option>
+            {seriesList.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      <TagInput
+        name="frequencyOptions"
+        label="Frequency Options"
+        defaultValue={(product?.frequencyOptions ?? []).join(", ")}
+        placeholder="e.g. Default Frequency, UHF 400-470"
+      />
+
+      <div className="flex flex-wrap gap-6">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="allowCustomFrequency"
+            defaultChecked={product?.allowCustomFrequency}
+          />
+          Allow custom frequency entry
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="customTxRequired"
+            defaultChecked={product?.customTxRequired}
+          />
+          TX frequency required
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="customRxRequired"
+            defaultChecked={product?.customRxRequired}
+          />
+          RX frequency required
+        </label>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div>
+          <Label>Signal Types</Label>
+          <div className="mt-2 max-h-40 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-3">
+            {signalTypes.map((st) => (
+              <label key={st.id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="signalTypeIds"
+                  value={st.id}
+                  defaultChecked={selectedSignalTypeIds.has(st.id)}
+                />
+                {st.name}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Frequency Bands</Label>
+          <div className="mt-2 max-h-40 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-3">
+            {frequencyBands.map((fb) => (
+              <label key={fb.id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="frequencyBandIds"
+                  value={fb.id}
+                  defaultChecked={selectedBandIds.has(fb.id)}
+                />
+                {fb.name}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div>
+          <Label>Manual Related Products</Label>
+          <div className="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-3">
+            {allProducts.map((p) => (
+              <label key={p.id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="relatedProductIds"
+                  value={p.id}
+                  defaultChecked={selectedRelatedIds.has(p.id)}
+                />
+                {p.name}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <Label>Compatible Accessories</Label>
+          <div className="mt-2 max-h-48 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-3">
+            {allProducts.map((p) => (
+              <label key={p.id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="compatibleProductIds"
+                  value={p.id}
+                  defaultChecked={selectedCompatibleIds.has(p.id)}
+                />
+                {p.name}
               </label>
             ))}
           </div>

@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/products/product-card";
 import { CategoryCard, IndustryCard } from "@/components/products/category-card";
 import { FeaturedTabs } from "@/components/products/featured-tabs";
-import { NewsletterForm } from "@/components/forms/newsletter-form";
 import { prisma } from "@/lib/prisma";
 import { getCurrency } from "@/lib/currency-server";
 
@@ -277,16 +276,21 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* NEWSLETTER */}
+      {/* QUOTE CTA */}
       <section className="container-page py-16 lg:py-20">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 to-blue-700 px-8 py-14 text-center text-white shadow-xl lg:px-16">
           <h2 className="text-3xl font-extrabold sm:text-4xl">Stay Connected</h2>
           <p className="mx-auto mt-3 max-w-xl text-blue-100">
-            Join our newsletter for product updates, deployment guides, and
-            exclusive offers — straight to your inbox.
+            Need a quote for radios, accessories, or a custom deployment? Our team
+            is ready to help.
           </p>
-          <div className="mx-auto mt-7 max-w-md">
-            <NewsletterForm />
+          <div className="mx-auto mt-7">
+            <a
+              href="/stay-connected"
+              className="inline-flex h-12 items-center justify-center rounded-lg bg-white px-8 text-sm font-bold text-blue-700 hover:bg-blue-50"
+            >
+              Request a Quote
+            </a>
           </div>
         </div>
       </section>

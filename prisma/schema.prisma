@@ -25,11 +25,45 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+  REFUNDED
 }
 
 enum Currency {
   CAD
   USD
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  PARTIALLY_PAID
+  REFUNDED
+  FAILED
+}
+
+enum RefundType {
+  FULL
+  PARTIAL
+}
+
+enum RefundStatus {
+  PROCESSED
+  PENDING
+  FAILED
+}
+
+enum ExpensePaymentStatus {
+  PAID
+  PENDING
+  PARTIALLY_PAID
+}
+
+enum InventoryChangeType {
+  SALE
+  MANUAL_ADJUSTMENT
+  RESTOCK
+  RETURN
+  DELETED_VARIANT
 }
 
 model User {
@@ -48,9 +82,12 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  cart      Cart?
-  orders    Order[]
-  auditLogs AuditLog[]
+  cart               Cart?
+  orders             Order[]
+  auditLogs          AuditLog[]
+  expenses           Expense[]
+  refundsProcessed   Refund[]            @relation("RefundProcessedBy")
+  inventoryChanges   InventoryMovement[] @relation("InventoryChangedBy")
 }
 
 model Category {
@@ -77,34 +114,121 @@ model Industry {
   products ProductIndustry[]
 }
 
-model Product {
-  id               String        @id @default(cuid())
-  name             String
-  slug             String        @unique
-  brand            String?
-  description      String        @db.Text
-  shortDescription String?
-  specifications   String?       @db.Text
-  images           String[]
-  status           ProductStatus @default(DRAFT)
-  isNewArrival     Boolean       @default(false)
-  isBestSeller     Boolean       @default(false)
-  priceCadCents    Int
-  priceUsdCents    Int
-  saleCadCents     Int?
-  saleUsdCents     Int?
-  hasVariants      Boolean       @default(false)
-  stock            Int           @default(0)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+model Series {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  options    ProductOption[]
-  variants   ProductVariant[]
-  categories ProductCategory[]
-  industries ProductIndustry[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  reviews    Review[]
+  products Product[]
+}
+
+model SignalType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  products ProductSignalType[]
+}
+
+model FrequencyBand {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  products ProductFrequencyBand[]
+}
+
+model Product {
+  id                   String        @id @default(cuid())
+  name                 String
+  slug                 String        @unique
+  brand                String?
+  description          String        @db.Text
+  shortDescription     String?
+  specifications       String?       @db.Text
+  images               String[]
+  status               ProductStatus @default(DRAFT)
+  isNewArrival         Boolean       @default(false)
+  isBestSeller         Boolean       @default(false)
+  priceCadCents        Int
+  priceUsdCents        Int
+  saleCadCents         Int?
+  saleUsdCents         Int?
+  hasVariants          Boolean       @default(false)
+  stock                Int           @default(0)
+  purchaseCostCents    Int?
+  lowStockThreshold    Int           @default(5)
+  seriesId             String?
+  frequencyOptions     String[]      @default([])
+  allowCustomFrequency Boolean       @default(false)
+  customTxRequired     Boolean       @default(false)
+  customRxRequired     Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  series              Series?                @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  options             ProductOption[]
+  variants            ProductVariant[]
+  categories          ProductCategory[]
+  industries          ProductIndustry[]
+  cartItems           CartItem[]
+  orderItems          OrderItem[]
+  reviews             Review[]
+  signalTypes         ProductSignalType[]
+  frequencyBands      ProductFrequencyBand[]
+  relatedFrom         RelatedProduct[]       @relation("ProductRelatedFrom")
+  relatedTo           RelatedProduct[]       @relation("ProductRelatedTo")
+  compatibleFrom      CompatibleProduct[]    @relation("ProductCompatibleFrom")
+  compatibleTo        CompatibleProduct[]    @relation("ProductCompatibleTo")
+  inventoryMovements  InventoryMovement[]
+}
+
+model RelatedProduct {
+  id               String @id @default(cuid())
+  productId        String
+  relatedProductId String
+  position         Int    @default(0)
+
+  product        Product @relation("ProductRelatedFrom", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("ProductRelatedTo", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+  @@index([productId])
+}
+
+model CompatibleProduct {
+  id                   String @id @default(cuid())
+  productId            String
+  compatibleProductId  String
+  position             Int    @default(0)
+
+  product            Product @relation("ProductCompatibleFrom", fields: [productId], references: [id], onDelete: Cascade)
+  compatibleProduct  Product @relation("ProductCompatibleTo", fields: [compatibleProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, compatibleProductId])
+  @@index([productId])
+}
+
+model ProductSignalType {
+  productId    String
+  signalTypeId String
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  signalType SignalType @relation(fields: [signalTypeId], references: [id], onDelete: Cascade)
+
+  @@id([productId, signalTypeId])
+}
+
+model ProductFrequencyBand {
+  productId       String
+  frequencyBandId String
+
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  frequencyBand FrequencyBand @relation(fields: [frequencyBandId], references: [id], onDelete: Cascade)
+
+  @@id([productId, frequencyBandId])
 }
 
 model ProductOption {
@@ -188,19 +312,21 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
-  cartId    String
-  productId String
-  variantId String?
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  cartId      String
+  productId   String
+  variantId   String?
+  quantity    Int      @default(1)
+  txFrequency String   @default("")
+  rxFrequency String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id])
   variant ProductVariant? @relation(fields: [variantId], references: [id])
 
-  @@unique([cartId, productId, variantId])
+  @@unique([cartId, productId, variantId, txFrequency, rxFrequency])
 }
 
 model Order {
@@ -213,7 +339,11 @@ model Order {
   subtotalCents   Int
   shippingCents   Int
   taxCents        Int         @default(0)
+  taxLabel        String?
+  taxRatePercent  Float?
+  adjustmentCents Int         @default(0)
   totalCents      Int
+  trackingNumber  String?
   paypalOrderId   String?
   paypalCaptureId String?
   shippingName    String
@@ -230,11 +360,16 @@ model Order {
   billingState    String?
   billingPostal   String?
   billingCountry  String?
+  deletedAt       DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  user  User?       @relation(fields: [userId], references: [id])
-  items OrderItem[]
+  user            User?              @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  invoices        Invoice[]
+  ledgerEntry     IncomeLedgerEntry?
+  paymentRecords  PaymentRecord[]
+  refunds         Refund[]
 }
 
 model OrderItem {
@@ -247,6 +382,8 @@ model OrderItem {
   sku            String?
   quantity       Int
   unitPriceCents Int
+  txFrequency    String?
+  rxFrequency    String?
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product         @relation(fields: [productId], references: [id])
@@ -271,27 +408,224 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 }
 
+model FeaturedItem {
+  id        String   @id @default(cuid())
+  title     String
+  image     String?
+  videoUrl  String?
+  altText   String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model SiteSettings {
-  id                  String   @id @default("singleton")
-  dualCurrencyEnabled Boolean  @default(true)
-  updatedAt           DateTime @updatedAt
+  id                    String   @id @default("singleton")
+  dualCurrencyEnabled   Boolean  @default(true)
+  taxLabel              String   @default("HST")
+  taxRatePercent        Float    @default(13)
+  companyName           String   @default("WirelessCom")
+  quoteRecipients       String   @default("abu@wirelesscom.ca, service@wirelesscom.ca")
+  smtpHost              String?
+  smtpPort              Int?
+  smtpSecure            Boolean  @default(false)
+  smtpUser              String?
+  smtpPasswordEnc       String?
+  smtpFrom              String?
+  sessionTimeoutMinutes Int      @default(30)
+  updatedAt             DateTime @updatedAt
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  ip        String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, ip, createdAt])
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  actorId     String?
-  actorEmail  String
-  action      String
-  entityType  String
-  entityId    String?
-  summary     String
-  metadata    Json?
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  actorId       String?
+  actorEmail    String
+  action        String
+  entityType    String
+  entityId      String?
+  summary       String
+  metadata      Json?
+  ipAddress     String?
+  previousValue Json?
+  newValue      Json?
+  createdAt     DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([actorId])
   @@index([createdAt])
+  @@index([action])
+}
+
+model InvoiceSettings {
+  id                 String   @id @default("singleton")
+  logoPath           String?
+  companyName        String   @default("WirelessCom.Ca Inc.")
+  companyAddress     String   @default("97 White Oak Drive East\nSault Ste. Marie, ON P6B 4J7")
+  taxNumber          String?
+  phone              String?
+  email              String?
+  footerMessage      String   @default("Thank you for your business!")
+  returnPolicy       String   @default("Returns accepted within 30 days of purchase.")
+  invoicePrefix      String   @default("INV-")
+  nextInvoiceNumber  Int      @default(1001)
+  updatedAt          DateTime @updatedAt
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  orderId       String
+  invoiceNumber String   @unique
+  pdfPath       String
+  version       Int      @default(1)
+  archivedPaths Json?
+  generatedAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model TaxRule {
+  id         String   @id @default(cuid())
+  country    String
+  province   String?
+  label      String
+  rate       Float
+  isDefault  Boolean  @default(false)
+  isEnabled  Boolean  @default(true)
+  stackGroup String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([country, province])
+}
+
+model ShippingRegion {
+  id                   String   @id @default(cuid())
+  country              String   @unique
+  freeShippingEnabled  Boolean  @default(true)
+  thresholdCents       Int      @default(12500)
+  flatRateCents        Int      @default(1500)
+  displayMessage       String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model IncomeLedgerEntry {
+  id              String   @id @default(cuid())
+  orderId         String   @unique
+  orderDate       DateTime
+  customerName    String
+  revenueAmount   Int
+  shippingIncome  Int
+  taxCollected    Int
+  discountAmount  Int      @default(0)
+  netRevenue      Int
+  paymentMethod   String?
+  transactionId   String?
+  createdAt       DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderDate])
+}
+
+model ExpenseCategory {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  expenses  Expense[]
+}
+
+model Expense {
+  id             String               @id @default(cuid())
+  expenseDate    DateTime
+  categoryId     String
+  description    String               @db.Text
+  amountCents    Int
+  attachmentPath String?
+  paymentStatus  ExpensePaymentStatus @default(PAID)
+  createdById    String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  category  ExpenseCategory @relation(fields: [categoryId], references: [id])
+  createdBy User?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([expenseDate])
+  @@index([categoryId])
+}
+
+model PaymentRecord {
+  id                   String        @id @default(cuid())
+  orderId              String
+  paymentDate          DateTime      @default(now())
+  customerName         String
+  method               String
+  transactionReference String?
+  amountPaidCents      Int
+  status               PaymentStatus @default(PENDING)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([paymentDate])
+  @@index([status])
+}
+
+model Refund {
+  id                   String       @id @default(cuid())
+  orderId              String
+  customerName         String
+  refundDate           DateTime     @default(now())
+  amountCents          Int
+  type                 RefundType
+  reason               String?      @db.Text
+  status               RefundStatus @default(PROCESSED)
+  transactionReference String?
+  processedById        String?
+  createdAt            DateTime     @default(now())
+
+  order       Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  processedBy User? @relation("RefundProcessedBy", fields: [processedById], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([refundDate])
+}
+
+model InventoryMovement {
+  id          String              @id @default(cuid())
+  productId   String
+  variantId   String?
+  productName String
+  sku         String?
+  changeType  InventoryChangeType
+  qtyBefore   Int
+  qtyAfter    Int
+  delta       Int
+  changedById String?
+  changedAt   DateTime            @default(now())
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  changedBy User?   @relation("InventoryChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([changedAt])
 }
 
 model PendingRegistration {

@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { createAdminAction } from "@/app/actions/admin-users";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export function CreateAdminForm() {
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +48,9 @@ export function CreateAdminForm() {
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="password">Initial password</Label>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             minLength={6}
             required
           />

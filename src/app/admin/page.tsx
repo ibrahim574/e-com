@@ -18,6 +18,12 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { FinancialDashboard } from "@/components/admin/financial-dashboard";
+import {
+  getFinancialKpis,
+  getMonthlyRevenueChart,
+  getYearlyRevenueChart,
+} from "@/lib/financial-dashboard";
 import {
   ORDER_STATUS_LIST,
   ORDER_STATUS_META,
@@ -30,7 +36,16 @@ export const dynamic = "force-dynamic";
 export default async function AdminDashboardPage() {
   const session = await requireAdmin();
 
+  const now = new Date();
+  const range = {
+    from: new Date(now.getFullYear(), now.getMonth(), 1),
+    to: now,
+  };
+
   const [
+    kpis,
+    monthlyChart,
+    yearlyChart,
     statusGroups,
     revenueGroups,
     orderCount,
@@ -45,6 +60,9 @@ export default async function AdminDashboardPage() {
     lowStockVariants,
     topItems,
   ] = await Promise.all([
+    getFinancialKpis(range),
+    getMonthlyRevenueChart(now.getFullYear(), "revenue"),
+    getYearlyRevenueChart("revenue"),
     prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
     prisma.order.groupBy({
       by: ["currency"],
@@ -65,10 +83,10 @@ export default async function AdminDashboardPage() {
       include: { user: true, items: true },
     }),
     prisma.product.findMany({
-      where: { hasVariants: false, stock: { lte: 5 } },
+      where: { hasVariants: false, stock: { lte: 20 } },
       orderBy: { stock: "asc" },
-      take: 6,
-      select: { id: true, name: true, slug: true, stock: true },
+      take: 20,
+      select: { id: true, name: true, slug: true, stock: true, lowStockThreshold: true },
     }),
     prisma.productVariant.findMany({
       where: { stock: { lte: 5 } },
@@ -98,7 +116,11 @@ export default async function AdminDashboardPage() {
     orders: g._count._all,
   }));
 
-  const lowStockCount = lowStockProducts.length + lowStockVariants.length;
+  const lowStockProductsFiltered = lowStockProducts.filter(
+    (p) => p.stock <= p.lowStockThreshold,
+  ).slice(0, 6);
+
+  const lowStockCount = lowStockProductsFiltered.length + lowStockVariants.length;
 
   const primaryStats = [
     {
@@ -165,6 +187,19 @@ export default async function AdminDashboardPage() {
           >
             View Orders
           </Link>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-bold text-slate-900">Financial Overview</h2>
+        <p className="mt-1 text-sm text-slate-500">Current month — cached 15 min</p>
+        <div className="mt-4">
+          <FinancialDashboard
+            kpis={kpis}
+            monthlyChart={monthlyChart}
+            yearlyChart={yearlyChart}
+            currency="CAD"
+          />
         </div>
       </div>
 
@@ -381,7 +416,7 @@ export default async function AdminDashboardPage() {
           </p>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {lowStockProducts.map((p) => (
+            {lowStockProductsFiltered.map((p) => (
               <Link
                 key={p.id}
                 href={`/admin/products/${p.id}/edit`}

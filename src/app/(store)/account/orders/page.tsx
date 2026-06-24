@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { formatPrice } from "@/lib/utils";
+import { CustomerOrdersList } from "@/components/account/customer-orders-list";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -10,9 +10,26 @@ export default async function OrdersPage() {
 
   const orders = await prisma.order.findMany({
     where: { userId: session.user.id },
-    include: { items: true },
+    include: {
+      items: true,
+      invoices: { orderBy: { version: "desc" }, take: 1 },
+    },
     orderBy: { createdAt: "desc" },
   });
+
+  const rows = orders.map((o) => ({
+    id: o.id,
+    orderNumber: o.orderNumber,
+    status: o.status,
+    totalCents: o.totalCents,
+    currency: o.currency,
+    createdAt: o.createdAt,
+    invoiceId: o.invoices[0]?.id ?? null,
+    items: o.items.map((i) => ({
+      productName: i.productName,
+      quantity: i.quantity,
+    })),
+  }));
 
   return (
     <div className="container-page py-10">
@@ -23,42 +40,10 @@ export default async function OrdersPage() {
         </Link>
       </div>
 
-      {orders.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-slate-600">You have no orders yet.</p>
       ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="rounded-xl border border-slate-200 p-6"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="font-bold text-slate-900">{order.orderNumber}</p>
-                  <p className="text-sm text-slate-500">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold">
-                    {formatPrice(order.totalCents, order.currency)}
-                  </p>
-                  <p className="text-sm capitalize text-slate-600">
-                    {order.status.toLowerCase()}
-                  </p>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-1 text-sm text-slate-600">
-                {order.items.map((item) => (
-                  <li key={item.id}>
-                    {item.quantity}x {item.productName}
-                    {item.variantLabel ? ` (${item.variantLabel})` : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+        <CustomerOrdersList orders={rows} />
       )}
     </div>
   );

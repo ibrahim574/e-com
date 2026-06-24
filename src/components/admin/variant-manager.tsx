@@ -1,6 +1,7 @@
 import {
   saveProductOptionAction,
   saveVariantAction,
+  generateVariantMatrixAction,
 } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
@@ -70,7 +71,17 @@ export function VariantManager({ product }: VariantManagerProps) {
             Add at least one option before creating variants.
           </p>
         ) : (
-          <form action={saveVariantAction} className="mt-4 space-y-4">
+          <>
+            <form action={generateVariantMatrixAction} className="mt-4">
+              <input type="hidden" name="productId" value={product.id} />
+              <Button type="submit" variant="outline">
+                Generate All Combinations
+              </Button>
+              <p className="mt-1 text-xs text-slate-500">
+                Auto-creates variant rows for every option combination. Existing combos are skipped.
+              </p>
+            </form>
+            <form action={saveVariantAction} className="mt-6 space-y-4">
             <input type="hidden" name="productId" value={product.id} />
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -115,6 +126,7 @@ export function VariantManager({ product }: VariantManagerProps) {
             </div>
             <Button type="submit">Add Variant</Button>
           </form>
+          </>
         )}
 
         {product.variants.length > 0 && (

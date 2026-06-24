@@ -7,7 +7,8 @@ import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CartItemQuantity } from "@/components/cart/cart-item-quantity";
 import { removeCartItemAction } from "@/app/actions/cart";
-import { getShippingCents } from "@/lib/constants";
+import { getShippingCentsForCountry } from "@/lib/shipping";
+import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
 
 export default async function CartPage() {
   const [cart, currency] = await Promise.all([getCart(), getCurrency()]);
@@ -24,8 +25,15 @@ export default async function CartPage() {
 
   subtotalCents = lines.reduce((sum, line) => sum + line.lineTotal, 0);
 
-  const shippingCents = getShippingCents(subtotalCents, currency);
-  const totalCents = subtotalCents + shippingCents;
+  const defaultCountry = currency === "CAD" ? "CA" : "US";
+  const shippingCents = await getShippingCentsForCountry(
+    subtotalCents,
+    defaultCountry,
+    currency,
+  );
+  const taxRules = await resolveTaxRules(defaultCountry, "ON");
+  const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);
+  const totalCents = subtotalCents + shippingCents + tax.taxCents;
 
   return (
     <div className="container-page py-10">
@@ -105,11 +113,20 @@ export default async function CartPage() {
                     : formatPrice(shippingCents, currency)}
                 </span>
               </div>
+              {tax.taxCents > 0 && (
+                <div className="flex justify-between">
+                  <span>{tax.taxLabel}</span>
+                  <span>{formatPrice(tax.taxCents, currency)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-slate-200 pt-2 text-base font-bold">
                 <span>Total</span>
                 <span>{formatPrice(totalCents, currency)}</span>
               </div>
             </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Tax calculated at checkout based on your shipping address.
+            </p>
             <Button className="mt-6 w-full" size="lg" asChild>
               <Link href="/checkout">Proceed to Checkout</Link>
             </Button>
