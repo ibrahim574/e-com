@@ -97,7 +97,6 @@ export function CheckoutClient({
     const script = document.createElement("script");
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${currency}&intent=capture&components=buttons`;
     script.async = true;
-    script.dataset.namespace = "paypal_sdk";
     script.onload = () => setReady(true);
     script.onerror = () => setError("Failed to load PayPal. Check your connection or client ID.");
     document.body.appendChild(script);
