@@ -39,11 +39,13 @@ export default async function StoreLayout({
         industries={industries}
         announcementText={settings.announcementText}
         announcementEnabled={settings.announcementEnabled}
+        logoUrl={settings.siteLogoUrl}
       />
       <main className="flex-1">{children}</main>
       <Footer
         dualCurrency={settings.dualCurrencyEnabled}
         proudlyCanadianEnabled={settings.proudlyCanadianEnabled}
+        logoUrl={settings.siteLogoUrl}
       />
     </ToastProvider>
   );

@@ -9,6 +9,7 @@ import { CartItemQuantity } from "@/components/cart/cart-item-quantity";
 import { removeCartItemAction } from "@/app/actions/cart";
 import { getShippingCentsForCountry } from "@/lib/shipping";
 import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
+import { formatItemFrequency } from "@/lib/order-item-frequency";
 
 export default async function CartPage() {
   const [cart, currency] = await Promise.all([getCart(), getCurrency()]);
@@ -49,7 +50,9 @@ export default async function CartPage() {
       ) : (
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
-            {lines.map(({ item, pricing, lineTotal }) => (
+            {lines.map(({ item, pricing, lineTotal }) => {
+              const frequency = formatItemFrequency(item);
+              return (
               <div
                 key={item.id}
                 className="flex gap-4 rounded-xl border border-slate-200 p-4"
@@ -74,6 +77,9 @@ export default async function CartPage() {
                       {getVariantLabel(item.variant)}
                     </p>
                   )}
+                  {frequency && (
+                    <p className="text-sm text-slate-500">{frequency}</p>
+                  )}
                   <p className="mt-1 font-medium">
                     {formatPrice(pricing.currentCents, currency)}
                   </p>
@@ -95,7 +101,8 @@ export default async function CartPage() {
                   {formatPrice(lineTotal, currency)}
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
 
           <div className="h-fit rounded-xl border border-slate-200 bg-slate-50 p-6">

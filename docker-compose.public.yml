@@ -50,6 +50,10 @@ services:
         condition: service_healthy
     volumes:
       - ./public/products/uploads:/app/public/products/uploads
+      - ./public/hero/uploads:/app/public/hero/uploads
+      - ./public/featured/uploads:/app/public/featured/uploads
+      - ./public/site/uploads:/app/public/site/uploads
+      - ./uploads:/app/uploads
 
 volumes:
   postgres_data:

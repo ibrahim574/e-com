@@ -7,15 +7,15 @@ import {
   ShoppingCart,
   Search,
   User,
-  Radio,
   ChevronDown,
   Menu,
   X,
   Phone,
 } from "lucide-react";
-import { SITE_NAME, SITE_PHONE } from "@/lib/constants";
+import { SITE_PHONE } from "@/lib/constants";
 import { setCurrencyAction } from "@/app/actions/currency";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SiteLogo } from "@/components/layout/site-logo";
 
 type NavItem = { name: string; slug: string };
 
@@ -27,6 +27,7 @@ export function Header({
   industries = [],
   announcementText,
   announcementEnabled = true,
+  logoUrl,
 }: {
   cartCount?: number;
   currency: "CAD" | "USD";
@@ -35,6 +36,7 @@ export function Header({
   industries?: NavItem[];
   announcementText?: string;
   announcementEnabled?: boolean;
+  logoUrl?: string | null;
 }) {
   const router = useRouter();
   const [openMenu, setOpenMenu] = useState<"categories" | "industries" | null>(
@@ -127,14 +129,7 @@ export function Header({
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
-          <Link href="/" className="flex items-center gap-2 font-extrabold text-slate-900">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30">
-              <Radio className="h-6 w-6" />
-            </span>
-            <span className="text-lg leading-tight tracking-tight sm:text-xl">
-              {SITE_NAME}
-            </span>
-          </Link>
+          <SiteLogo logoUrl={logoUrl} className="shadow-none" />
 
           {/* Desktop search */}
           <form

@@ -76,7 +76,9 @@ export async function createCheckoutOrderAction(formData: FormData) {
     }
 
     subtotalCents += pricing.currentCents * item.quantity;
-    const isCustomFreq = Boolean(item.rxFrequency?.trim());
+    const isCustomFreq = Boolean(
+      item.txFrequency?.trim() && item.rxFrequency?.trim(),
+    );
     orderItems.push({
       productId: item.productId,
       variantId: item.variantId,

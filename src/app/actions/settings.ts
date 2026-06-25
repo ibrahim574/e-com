@@ -8,6 +8,10 @@ import { encryptSecret } from "@/lib/crypto";
 import { cacheInvalidate } from "@/lib/cache";
 import { invalidateEmailTransporter, sendTestEmail } from "@/lib/email";
 import { sanitizeText } from "@/lib/sanitize";
+import {
+  deleteSiteLogoFile,
+  saveSiteLogoFile,
+} from "@/lib/site-logo-server";
 
 export async function updateSiteSettingsAction(formData: FormData) {
   const actor = await getActorOrThrow();
@@ -112,6 +116,46 @@ export async function updateSiteSettingsAction(formData: FormData) {
       update: { sessionTimeoutMinutes },
       create: { id: "singleton", sessionTimeoutMinutes },
     });
+  } else if (section === "branding") {
+    const resetLogo = formData.get("resetLogo") === "on";
+    const update: Record<string, unknown> = {};
+
+    if (resetLogo && before?.siteLogoUrl) {
+      await deleteSiteLogoFile(before.siteLogoUrl);
+      update.siteLogoUrl = null;
+    }
+
+    const logo = formData.get("siteLogo") as File | null;
+    if (logo && logo.size > 0) {
+      try {
+        const siteLogoUrl = await saveSiteLogoFile(logo);
+        if (before?.siteLogoUrl) {
+          await deleteSiteLogoFile(before.siteLogoUrl);
+        }
+        update.siteLogoUrl = siteLogoUrl;
+      } catch (err) {
+        return {
+          error: err instanceof Error ? err.message : "Could not upload logo.",
+        };
+      }
+    }
+
+    if (!resetLogo && !(logo && logo.size > 0)) {
+      return { error: "Choose a logo file to upload, or check reset to default." };
+    }
+
+    await prisma.siteSettings.upsert({
+      where: { id: "singleton" },
+      update,
+      create: { id: "singleton", ...update },
+    });
+    await recordAudit({
+      actor,
+      action: "SETTING",
+      entityType: "SiteSettings",
+      entityId: "singleton",
+      summary: resetLogo ? "Site logo reset to default" : "Site logo updated",
+    });
   } else if (section === "general") {
     const announcementText = sanitizeText(
       String(formData.get("announcementText") ?? ""),
@@ -119,6 +163,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
     );
     const announcementEnabled = formData.get("announcementEnabled") === "on";
     const proudlyCanadianEnabled = formData.get("proudlyCanadianEnabled") === "on";
+
     await prisma.siteSettings.upsert({
       where: { id: "singleton" },
       update: { announcementText, announcementEnabled, proudlyCanadianEnabled },
@@ -140,6 +185,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
 
   cacheInvalidate("site-settings");
   revalidatePath("/", "layout");
+  revalidatePath("/admin", "layout");
   revalidatePath("/admin/settings");
   return { success: true };
 }

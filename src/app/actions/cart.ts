@@ -27,10 +27,17 @@ export async function addToCartAction(formData: FormData) {
     : null;
   const requested = Math.max(1, Number(formData.get("quantity") ?? 1));
   const selectedFrequency = String(formData.get("selectedFrequency") ?? "").trim();
-  const isCustom = selectedFrequency === "Custom Frequency";
   let txFrequency = String(formData.get("txFrequency") ?? "").trim();
   let rxFrequency = String(formData.get("rxFrequency") ?? "").trim();
-  if (!isCustom && selectedFrequency) {
+  const isCustom =
+    selectedFrequency === "Custom Frequency" ||
+    (Boolean(txFrequency) && Boolean(rxFrequency));
+
+  if (isCustom) {
+    if (!txFrequency || !rxFrequency) {
+      return { error: "TX and RX frequencies are required for custom programming." };
+    }
+  } else if (selectedFrequency) {
     txFrequency = selectedFrequency;
     rxFrequency = "";
   }

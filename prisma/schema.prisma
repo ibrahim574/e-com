@@ -489,6 +489,7 @@ model SiteSettings {
   announcementText      String   @default("Free shipping available on eligible products and orders.")
   announcementEnabled   Boolean  @default(true)
   proudlyCanadianEnabled Boolean @default(true)
+  siteLogoUrl           String?
   updatedAt             DateTime @updatedAt
 }
 

@@ -19,6 +19,7 @@ export type SiteSettings = {
   announcementText: string;
   announcementEnabled: boolean;
   proudlyCanadianEnabled: boolean;
+  siteLogoUrl: string | null;
   updatedAt: Date;
 };
 

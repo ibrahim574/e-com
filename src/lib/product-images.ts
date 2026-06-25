@@ -59,7 +59,17 @@ export async function saveProductImageFile(file: File): Promise<string> {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(resolved, buffer);
+  try {
+    await writeFile(resolved, buffer);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "EACCES" || code === "EPERM") {
+      throw new Error(
+        "Could not save image. The server upload directory is not writable.",
+      );
+    }
+    throw err;
+  }
 
   return `${PRODUCT_UPLOADS_PUBLIC_PREFIX}${filename}`;
 }

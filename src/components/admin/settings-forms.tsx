@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   updateSiteSettingsAction,
   sendTestEmailAction,
@@ -23,6 +24,10 @@ import { Input, Label } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import type { SiteSettings } from "@/lib/site-settings";
 import type { InvoiceSettingsData } from "@/lib/invoice/invoice-settings";
+import {
+  isSiteLogoUpload,
+  resolveSiteLogoUrl,
+} from "@/lib/site-logo";
 
 type Attr = { id: string; name: string };
 
@@ -57,6 +62,7 @@ type ShippingZoneRow = {
 };
 
 const TABS = [
+  { id: "branding", label: "Branding" },
   { id: "currency", label: "Currency" },
   { id: "tax", label: "Tax Rules" },
   { id: "shipping", label: "Shipping" },
@@ -91,6 +97,14 @@ export function SettingsForms({
   const [tab, setTab] = useState<TabId>("currency");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  async function handleBranding(formData: FormData) {
+    setMessage(null);
+    setError(null);
+    const result = await updateSiteSettingsAction(formData);
+    if (result?.error) setError(result.error);
+    else setMessage("Logo saved.");
+  }
 
   async function handleSettings(formData: FormData) {
     setMessage(null);
@@ -128,6 +142,53 @@ export function SettingsForms({
 
       {message && <p className="mb-4 text-sm text-emerald-600">{message}</p>}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
+      {tab === "branding" && (
+        <form
+          action={handleBranding}
+          encType="multipart/form-data"
+          className="max-w-2xl space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <input type="hidden" name="section" value="branding" />
+          <h2 className="text-lg font-bold text-slate-900">Site logo</h2>
+          <p className="text-sm text-slate-600">
+            Upload a logo to display in the site header and footer.
+          </p>
+          <div>
+            <Label>Current logo</Label>
+            <div className="mt-2 flex items-center gap-4">
+              <Image
+                src={resolveSiteLogoUrl(settings.siteLogoUrl)}
+                alt="Current site logo"
+                width={64}
+                height={64}
+                className="h-16 w-16 rounded-xl object-contain"
+                unoptimized={
+                  isSiteLogoUpload(resolveSiteLogoUrl(settings.siteLogoUrl)) ||
+                  resolveSiteLogoUrl(settings.siteLogoUrl) === "/logo.png"
+                }
+              />
+              <Input
+                name="siteLogo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              JPEG, PNG, or WebP up to 2 MB.
+            </p>
+            {settings.siteLogoUrl && (
+              <label className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="resetLogo" />
+                Reset to default logo
+              </label>
+            )}
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit">Save logo</Button>
+          </div>
+        </form>
+      )}
 
       {tab === "currency" && (
         <form

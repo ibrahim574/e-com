@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Radio,
   Phone,
   Mail,
   MapPin,
@@ -21,6 +20,7 @@ import {
   SITE_MAP_LINK_URL,
 } from "@/lib/constants";
 import { PaymentLogos } from "@/components/layout/payment-logos";
+import { SiteLogo } from "@/components/layout/site-logo";
 
 const socials = [
   {
@@ -44,9 +44,11 @@ const socials = [
 export function Footer({
   dualCurrency = true,
   proudlyCanadianEnabled = true,
+  logoUrl,
 }: {
   dualCurrency?: boolean;
   proudlyCanadianEnabled?: boolean;
+  logoUrl?: string | null;
 } = {}) {
   const trust = [
     { icon: Truck, label: "Fast Free Shipping" },
@@ -73,12 +75,7 @@ export function Footer({
 
       <div className="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <Link href="/" className="flex items-center gap-2 font-extrabold text-slate-900">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white">
-              <Radio className="h-6 w-6" />
-            </span>
-            <span className="text-lg">{SITE_NAME}</span>
-          </Link>
+          <SiteLogo logoUrl={logoUrl} />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-slate-500">
             Expert two-way radio solutions with fast shipping, professional
             programming, and industry-ready kits — trusted by teams across the US

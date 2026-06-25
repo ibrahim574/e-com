@@ -79,6 +79,54 @@ type ProductDetailClientProps = {
 
 type TabKey = "details" | "specs" | "reviews";
 
+const CUSTOM_FREQUENCY_VALUE = "Custom Frequency";
+
+function getSelectedOptionValue(
+  option: Option,
+  selectedValues: Record<string, string>,
+) {
+  return option.values.find((v) => v.id === selectedValues[option.id])?.value;
+}
+
+function CustomFrequencyFields({
+  txFrequency,
+  rxFrequency,
+  onTxChange,
+  onRxChange,
+  idPrefix = "",
+}: {
+  txFrequency: string;
+  rxFrequency: string;
+  onTxChange: (value: string) => void;
+  onRxChange: (value: string) => void;
+  idPrefix?: string;
+}) {
+  return (
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div>
+        <Label htmlFor={`${idPrefix}tx-freq`}>TX Frequency *</Label>
+        <Input
+          id={`${idPrefix}tx-freq`}
+          value={txFrequency}
+          onChange={(e) => onTxChange(e.target.value)}
+          placeholder="e.g. 462.5625 MHz"
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor={`${idPrefix}rx-freq`}>RX Frequency *</Label>
+        <Input
+          id={`${idPrefix}rx-freq`}
+          value={rxFrequency}
+          onChange={(e) => onRxChange(e.target.value)}
+          placeholder="e.g. 462.5625 MHz"
+          required
+        />
+      </div>
+    </div>
+  );
+}
+
 export function ProductDetailClient({
   product,
   options,
@@ -99,13 +147,26 @@ export function ProductDetailClient({
 
   const frequencyChoices = useMemo(() => {
     const opts = [...(product.frequencyOptions ?? [])];
-    if (product.allowCustomFrequency && !opts.includes("Custom Frequency")) {
-      opts.push("Custom Frequency");
+    if (product.allowCustomFrequency && !opts.includes(CUSTOM_FREQUENCY_VALUE)) {
+      opts.push(CUSTOM_FREQUENCY_VALUE);
     }
     return opts;
   }, [product.frequencyOptions, product.allowCustomFrequency]);
 
-  const isCustomFrequency = selectedFrequency === "Custom Frequency";
+  const isCustomProgramming = useMemo(
+    () =>
+      options.some(
+        (option) =>
+          getSelectedOptionValue(option, selectedValues) === CUSTOM_FREQUENCY_VALUE,
+      ),
+    [options, selectedValues],
+  );
+
+  const isCustomFrequency =
+    isCustomProgramming || selectedFrequency === CUSTOM_FREQUENCY_VALUE;
+
+  const hasCustomFrequencyFields =
+    isCustomFrequency && txFrequency.trim() && rxFrequency.trim();
 
   const selectedVariant = useMemo(() => {
     if (!product.hasVariants || !variants.length) return null;
@@ -138,10 +199,8 @@ export function ProductDetailClient({
     allOptionsChosen &&
     inStock &&
     (!product.hasVariants || selectedVariant) &&
-    (!frequencyChoices.length || selectedFrequency) &&
-    (!isCustomFrequency ||
-      ((!product.customTxRequired || txFrequency.trim()) &&
-        (!product.customRxRequired || rxFrequency.trim())));
+    (!frequencyChoices.length || selectedFrequency || isCustomProgramming) &&
+    (!isCustomFrequency || hasCustomFrequencyFields);
   const maxQuantity = product.hasVariants
     ? (selectedVariant?.stock ?? 1)
     : product.stock;
@@ -149,6 +208,13 @@ export function ProductDetailClient({
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), maxQuantity));
   }, [maxQuantity, selectedVariant?.id]);
+
+  useEffect(() => {
+    if (!isCustomFrequency) {
+      setTxFrequency("");
+      setRxFrequency("");
+    }
+  }, [isCustomFrequency]);
 
   const specRows = useMemo(() => {
     if (!product.specifications) return [];
@@ -176,10 +242,12 @@ export function ProductDetailClient({
     formData.set("productId", product.id);
     if (selectedVariant) formData.set("variantId", selectedVariant.id);
     formData.set("quantity", String(quantity));
-    if (selectedFrequency) formData.set("selectedFrequency", selectedFrequency);
     if (isCustomFrequency) {
+      formData.set("selectedFrequency", CUSTOM_FREQUENCY_VALUE);
       formData.set("txFrequency", txFrequency.trim());
       formData.set("rxFrequency", rxFrequency.trim());
+    } else if (selectedFrequency) {
+      formData.set("selectedFrequency", selectedFrequency);
     }
     await addToCartAction(formData);
     setPending(false);
@@ -286,15 +354,19 @@ export function ProductDetailClient({
 
           {/* Option groups */}
           <div className="space-y-5">
-            {options.map((option) => (
+            {options.map((option) => {
+              const selectedValue = getSelectedOptionValue(option, selectedValues);
+              const showCustomFields =
+                selectedValue === CUSTOM_FREQUENCY_VALUE;
+
+              return (
               <div key={option.id}>
                 <div className="mb-2 flex items-center gap-2">
                   <span className="text-sm font-bold text-slate-900">
                     {option.name}:
                   </span>
                   <span className="text-sm text-slate-500">
-                    {option.values.find((v) => v.id === selectedValues[option.id])
-                      ?.value ?? "Select an option"}
+                    {selectedValue ?? "Select an option"}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -321,8 +393,18 @@ export function ProductDetailClient({
                     );
                   })}
                 </div>
+                {showCustomFields && (
+                  <CustomFrequencyFields
+                    idPrefix={`opt-${option.id}-`}
+                    txFrequency={txFrequency}
+                    rxFrequency={rxFrequency}
+                    onTxChange={setTxFrequency}
+                    onRxChange={setRxFrequency}
+                  />
+                )}
               </div>
-            ))}
+            );
+            })}
           </div>
 
           {frequencyChoices.length > 0 && (
@@ -341,33 +423,13 @@ export function ProductDetailClient({
                   </option>
                 ))}
               </select>
-              {isCustomFrequency && (
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="tx-freq">
-                      TX Frequency{product.customTxRequired ? " *" : ""}
-                    </Label>
-                    <Input
-                      id="tx-freq"
-                      value={txFrequency}
-                      onChange={(e) => setTxFrequency(e.target.value)}
-                      placeholder="e.g. 462.5625 MHz"
-                      required={product.customTxRequired}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="rx-freq">
-                      RX Frequency{product.customRxRequired ? " *" : ""}
-                    </Label>
-                    <Input
-                      id="rx-freq"
-                      value={rxFrequency}
-                      onChange={(e) => setRxFrequency(e.target.value)}
-                      placeholder="e.g. 462.5625 MHz"
-                      required={product.customRxRequired}
-                    />
-                  </div>
-                </div>
+              {isCustomFrequency && !isCustomProgramming && (
+                <CustomFrequencyFields
+                  txFrequency={txFrequency}
+                  rxFrequency={rxFrequency}
+                  onTxChange={setTxFrequency}
+                  onRxChange={setRxFrequency}
+                />
               )}
             </div>
           )}
@@ -401,8 +463,10 @@ export function ProductDetailClient({
                 "Select Options Above"
               ) : !inStock ? (
                 "Out of Stock"
-              ) : frequencyChoices.length && !selectedFrequency ? (
+              ) : frequencyChoices.length && !selectedFrequency && !isCustomProgramming ? (
                 "Select Frequency"
+              ) : isCustomFrequency && !hasCustomFrequencyFields ? (
+                "Enter TX and RX Frequency"
               ) : (
                 "Add to Cart"
               )}

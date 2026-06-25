@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { Radio, UserCircle } from "lucide-react";
+import { UserCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { isAdminRole, isSuperAdminRole } from "@/lib/admin-guard";
+import { getSiteSettings } from "@/lib/site-settings";
 import { AdminNavMobile, AdminNavSidebar } from "@/components/admin/admin-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ToastProvider } from "@/components/ui/toast-provider";
+import { SiteLogo } from "@/components/layout/site-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,7 @@ export default async function AdminLayout({
   const session = await auth();
   const isAdmin = isAdminRole(session?.user?.role);
   const isSuper = isSuperAdminRole(session?.user?.role);
+  const settings = isAdmin ? await getSiteSettings() : null;
 
   return (
     <ToastProvider>
@@ -25,12 +28,19 @@ export default async function AdminLayout({
             <div className="mx-auto flex h-16 max-w-[90rem] items-center justify-between gap-3 px-4">
               <div className="flex items-center gap-3">
                 <AdminNavMobile isSuperAdmin={isSuper} />
-                <Link href="/admin" className="flex items-center gap-2 font-bold dark:text-white">
-                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-blue-600 text-white">
-                    <Radio className="h-4 w-4" />
-                  </span>
-                  <span className="hidden sm:inline">Admin Panel</span>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <SiteLogo
+                    logoUrl={settings?.siteLogoUrl}
+                    size="sm"
+                    showName={false}
+                  />
+                  <Link
+                    href="/admin"
+                    className="hidden font-bold dark:text-white sm:inline"
+                  >
+                    Admin Panel
+                  </Link>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <ThemeToggle />
