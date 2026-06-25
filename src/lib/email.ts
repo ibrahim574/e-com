@@ -84,7 +84,16 @@ type SendEmailInput = {
   text: string;
 };
 
-export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
+export async function isEmailConfigured(): Promise<boolean> {
+  return (await getTransporter()) !== null;
+}
+
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+}: SendEmailInput): Promise<boolean> {
   const transporter = await getTransporter();
 
   if (!transporter) {
@@ -94,7 +103,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
         `  Subject: ${subject}\n` +
         `  ${text}\n`,
     );
-    return;
+    return false;
   }
 
   await transporter.sendMail({
@@ -104,6 +113,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
     text,
     html,
   });
+  return true;
 }
 
 type SendEmailWithAttachmentInput = SendEmailInput & {

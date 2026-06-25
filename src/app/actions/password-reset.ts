@@ -2,7 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { validatePassword } from "@/lib/password-policy";
 import {
   createPasswordResetToken,
@@ -56,13 +56,29 @@ export async function requestPasswordResetAction(formData: FormData) {
   const html = resetEmailHtml(resetUrl, EMAIL_BRAND_NAME);
   const text = `Reset your password: ${resetUrl}\n\nThis link expires in 1 hour.`;
 
+  const configured = await isEmailConfigured();
+  if (!configured) {
+    if (process.env.NODE_ENV === "development") {
+      console.info(
+        `[password-reset] SMTP not configured. Reset URL for ${email}: ${resetUrl}`,
+      );
+      return { success: true };
+    }
+    return {
+      error: "Could not send reset email. Email is not configured on this server.",
+    };
+  }
+
   try {
-    await sendEmail({
+    const sent = await sendEmail({
       to: email,
       subject: `Reset your ${EMAIL_BRAND_NAME} password`,
       html,
       text,
     });
+    if (!sent) {
+      return { error: "Could not send reset email. Please try again later." };
+    }
   } catch {
     return { error: "Could not send reset email. Please try again later." };
   }

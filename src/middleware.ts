@@ -42,15 +42,18 @@ export default auth((req: NextRequest & { auth: unknown }) => {
 
   const isAdminRoute = pathname.startsWith("/admin");
 
-  const isAdminLogin = pathname === "/admin/login";
+  const isPublicAdminAuth =
+    pathname === "/admin/login" ||
+    pathname === "/admin/forgot-password" ||
+    pathname === "/admin/reset-password";
 
-  if (isAdminRoute && !isAdminLogin && !isAdminUser) {
+  if (isAdminRoute && !isPublicAdminAuth && !isAdminUser) {
     const loginUrl = new URL("/admin/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return securityHeaders(NextResponse.redirect(loginUrl));
   }
 
-  if (isAdminLogin && isAdminUser) {
+  if (pathname === "/admin/login" && isAdminUser) {
     return securityHeaders(NextResponse.redirect(new URL("/admin", req.url)));
   }
 
