@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   Radio,
   Phone,
@@ -21,6 +20,7 @@ import {
   SITE_MAP_EMBED_URL,
   SITE_MAP_LINK_URL,
 } from "@/lib/constants";
+import { PaymentLogos } from "@/components/layout/payment-logos";
 
 const socials = [
   {
@@ -184,27 +184,12 @@ export function Footer({
         </div>
       </div>
 
-      <div className="border-t border-slate-200 bg-white">
+      <div className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="container-page py-6">
-          <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Secure Payments
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {[
-              { src: "/payment/visa.svg", alt: "Visa", w: 60, h: 20 },
-              { src: "/payment/mastercard.svg", alt: "Mastercard", w: 44, h: 28 },
-              { src: "/payment/paypal.svg", alt: "PayPal", w: 80, h: 22 },
-            ].map((logo) => (
-              <Image
-                key={logo.alt}
-                src={logo.src}
-                alt={logo.alt}
-                width={logo.w}
-                height={logo.h}
-                className="h-8 w-auto"
-              />
-            ))}
-          </div>
+          <PaymentLogos />
         </div>
       </div>
 
