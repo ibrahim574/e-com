@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import { useState } from "react";
 import {
   bulkDeleteProductsAction,
@@ -117,7 +117,7 @@ export function ProductsAdminList({
                   </td>
                   <td className="px-4 py-3">
                     <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                      <Image
+                      <ProductImage
                         src={product.images[0] ?? "/placeholder-product.svg"}
                         alt=""
                         fill

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Radio, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ function ProductCard({ product }: { product: HeroFeaturedProduct }) {
       </div>
       <div className="relative mt-6 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
         {image ? (
-          <Image
+          <ProductImage
             src={image}
             alt={product.name}
             fill

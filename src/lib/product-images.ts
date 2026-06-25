@@ -1,8 +1,12 @@
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import {
+  isManagedUploadPath,
+  PRODUCT_UPLOADS_PUBLIC_PREFIX,
+} from "./product-image-paths";
 
-export const PRODUCT_UPLOADS_PUBLIC_PREFIX = "/products/uploads/";
+export { isManagedUploadPath, PRODUCT_UPLOADS_PUBLIC_PREFIX } from "./product-image-paths";
 export const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -19,10 +23,6 @@ const MIME_TO_EXT: Record<string, string> = {
 
 function getUploadsDir(): string {
   return path.join(process.cwd(), "public", "products", "uploads");
-}
-
-export function isManagedUploadPath(url: string): boolean {
-  return url.startsWith(PRODUCT_UPLOADS_PUBLIC_PREFIX);
 }
 
 export function validateProductImageFile(file: File): string | null {

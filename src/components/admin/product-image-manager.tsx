@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import { useRef, useState } from "react";
 import {
   deleteProductImageAction,
@@ -116,26 +116,26 @@ export function ProductImageManager({
           {images.map((url, index) => (
             <li
               key={url}
-              className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+              className="relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800"
             >
               <div className="relative aspect-square">
-                <Image
+                <ProductImage
                   src={url}
-                  alt={`Product image ${index + 1}`}
+                  alt=""
                   fill
                   className="object-contain p-2"
                   sizes="(max-width: 640px) 50vw, 200px"
                 />
               </div>
               {index === 0 && (
-                <span className="absolute left-2 top-2 rounded bg-slate-900/75 px-2 py-0.5 text-xs text-white">
+                <span className="absolute left-2 top-2 z-10 rounded bg-slate-900/75 px-2 py-0.5 text-xs text-white">
                   Primary
                 </span>
               )}
               <Button
                 type="button"
                 variant="outline"
-                className="absolute right-2 top-2 h-8 min-h-8 px-2 text-xs"
+                className="absolute right-2 top-2 z-10 h-8 min-h-8 px-2 text-xs"
                 disabled={removingUrl === url || uploading}
                 onClick={() => handleRemove(url)}
               >

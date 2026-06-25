@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import { getCart, getVariantLabel } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
@@ -58,7 +58,7 @@ export default async function CartPage() {
                 className="flex gap-4 rounded-xl border border-slate-200 p-4"
               >
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-50">
-                  <Image
+                  <ProductImage
                     src={item.product.images[0] ?? "/placeholder-product.svg"}
                     alt={item.product.name}
                     fill

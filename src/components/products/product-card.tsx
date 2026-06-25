@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -34,7 +34,7 @@ export function ProductCard({ product, currency }: ProductCardProps) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl">
       <div className="relative aspect-square overflow-hidden bg-[#f8fafc]">
-        <Image
+        <ProductImage
           src={image}
           alt={product.name}
           fill

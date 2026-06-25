@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import { ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react";
 import {
   addHeroFeaturedProductAction,
@@ -121,7 +121,7 @@ export function HeroFeaturedPicker({
                 <tr key={entry.id} className="border-t border-slate-100 dark:border-slate-800">
                   <td className="px-4 py-3">
                     <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700">
-                      <Image
+                      <ProductImage
                         src={entry.product.images[0] ?? "/placeholder-product.svg"}
                         alt=""
                         fill

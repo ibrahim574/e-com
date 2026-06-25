@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { ProductImage } from "@/components/products/product-image";
 import {
   Star,
   Check,
@@ -267,7 +267,7 @@ export function ProductDetailClient({
         {/* Gallery */}
         <div className="lg:sticky lg:top-28 lg:self-start">
           <div className="relative aspect-square overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc]">
-            <Image
+            <ProductImage
               src={image}
               alt={product.name}
               fill
@@ -292,7 +292,7 @@ export function ProductDetailClient({
                       : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
-                  <Image src={img} alt="" fill className="object-contain p-2" />
+                  <ProductImage src={img} alt="" fill className="object-contain p-2" />
                 </button>
               ))}
             </div>
