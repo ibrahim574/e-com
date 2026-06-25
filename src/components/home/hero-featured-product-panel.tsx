@@ -30,35 +30,38 @@ function ProductCard({ product }: { product: HeroFeaturedProduct }) {
   const subtitle = product.brand ?? "Nationwide PoC";
 
   return (
-    <div className="relative mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-            <Star className="h-3 w-3 fill-current" /> Featured
-          </span>
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</span>
-        </div>
-        <div className="relative mt-6 grid place-items-center overflow-hidden rounded-2xl bg-gradient-to-b from-slate-50 to-white py-10 dark:from-slate-800 dark:to-slate-900">
-          {image ? (
-            <div className="relative h-28 w-full">
-              <Image
-                src={image}
-                alt={product.name}
-                fill
-                className="object-contain px-6"
-                sizes="400px"
-              />
-            </div>
-          ) : (
-            <Radio className="h-28 w-28 text-blue-500" strokeWidth={1.2} />
-          )}
-        </div>
-        <h3 className="mt-6 text-xl font-bold text-slate-900 dark:text-white">{product.name}</h3>
-        {product.shortDescription && (
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{product.shortDescription}</p>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-center justify-between">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+          <Star className="h-3 w-3 fill-current" /> Featured
+        </span>
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</span>
+      </div>
+      <div className="relative mt-6 aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
+        {image ? (
+          <Image
+            src={image}
+            alt={product.name}
+            fill
+            priority
+            className="object-contain p-2 sm:p-4"
+            sizes="(max-width: 768px) 90vw, 400px"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Radio className="h-32 w-32 text-blue-500 sm:h-40 sm:w-40" strokeWidth={1.2} />
+          </div>
         )}
-        <Button className="mt-5 w-full" asChild>
-          <Link href={`/products/${product.slug}`}>View Product</Link>
-        </Button>
+      </div>
+      <h3 className="mt-6 text-xl font-bold text-slate-900 dark:text-white">{product.name}</h3>
+      {product.shortDescription && (
+        <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          {product.shortDescription}
+        </p>
+      )}
+      <Button className="mt-5 w-full" asChild>
+        <Link href={`/products/${product.slug}`}>View Product</Link>
+      </Button>
     </div>
   );
 }
@@ -93,8 +96,17 @@ export function HeroFeaturedProductPanel({ products }: { products: HeroFeaturedP
   return (
     <div className="animate-fade-up [animation-delay:120ms]">
       <div className="relative mx-auto max-w-md">
-        <div key={items[index].id} className="animate-fade-up">
-          <ProductCard product={items[index]} />
+        <div className="overflow-hidden rounded-3xl">
+          <div
+            className="flex transition-transform duration-700 ease-in-out will-change-transform"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
+            {items.map((product) => (
+              <div key={product.id} className="w-full shrink-0">
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
 
         {showControls && (
@@ -102,7 +114,7 @@ export function HeroFeaturedProductPanel({ products }: { products: HeroFeaturedP
             <button
               type="button"
               onClick={prev}
-              className="absolute left-0 top-1/2 z-10 -translate-x-2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-2 shadow-md hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+              className="absolute left-0 top-1/2 z-10 -translate-x-2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-2 shadow-md transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
               aria-label="Previous featured product"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -110,7 +122,7 @@ export function HeroFeaturedProductPanel({ products }: { products: HeroFeaturedP
             <button
               type="button"
               onClick={next}
-              className="absolute right-0 top-1/2 z-10 translate-x-2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-2 shadow-md hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
+              className="absolute right-0 top-1/2 z-10 translate-x-2 -translate-y-1/2 rounded-full border border-slate-200 bg-white p-2 shadow-md transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
               aria-label="Next featured product"
             >
               <ChevronRight className="h-4 w-4" />
@@ -121,8 +133,8 @@ export function HeroFeaturedProductPanel({ products }: { products: HeroFeaturedP
                   key={product.id}
                   type="button"
                   onClick={() => setIndex(i)}
-                  className={`h-2 w-2 rounded-full transition ${
-                    i === index ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-600"
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === index ? "w-6 bg-blue-600" : "w-2 bg-slate-300 dark:bg-slate-600"
                   }`}
                   aria-label={`Go to featured product ${i + 1}`}
                 />
