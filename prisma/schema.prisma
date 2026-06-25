@@ -178,6 +178,7 @@ model Product {
   heightCm             Float?
   weightGrams          Int?
   shippingClassId      String?
+  youtubeUrl           String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
@@ -438,10 +439,25 @@ model FeaturedItem {
   image     String?
   videoUrl  String?
   altText   String?
+  linkUrl   String?
   position  Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model HeroSlide {
+  id        String   @id @default(cuid())
+  title     String?
+  subtitle  String?
+  image     String
+  linkUrl   String?
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([position])
 }
 
 model SiteSettings {

@@ -3,8 +3,12 @@ export const SITE_TAGLINE = "Professional Two-Way Radios & Communication Solutio
 export const SITE_PHONE = "1-800-705-3189";
 export const SITE_EMAIL = "service@wirelesscom.ca";
 
-export const PARENT_COMPANY = "WirelessCom.Ca";
-export const PARENT_COMPANY_URL = "https://www.wirelesscom.org/";
+/** Display name for all transactional / OTP emails */
+export const EMAIL_BRAND_NAME = "Hytera Radio - Operated by WirelessCom.ca Inc.";
+
+export const PARENT_COMPANY = "WirelessCom.Ca Inc.";
+export const PARENT_COMPANY_URL = "https://www.wirelesscom.ca/";
+export const SITE_DOMAIN = "Hyteraradio.ca";
 
 export const SITE_ADDRESS_LINES = [
   "WirelessCom.Ca Inc.",

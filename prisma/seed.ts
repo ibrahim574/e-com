@@ -51,33 +51,52 @@ type SeedProduct = {
 };
 
 async function main() {
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@example.com";
   const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
   const passwordHash = await bcrypt.hash(adminPassword, 12);
 
-  // Ensure there is at least one SUPER_ADMIN. The seeded admin becomes the
-  // initial super admin if none exists yet; otherwise we don't touch the role.
-  const existingSuperAdmin = await prisma.user.findFirst({
-    where: { role: "SUPER_ADMIN" },
-    select: { id: true },
-  });
-  const seedRole: "ADMIN" | "SUPER_ADMIN" = existingSuperAdmin ? "ADMIN" : "SUPER_ADMIN";
+  const superAdmins = [
+    { email: "abu@wirelesscom.ca", name: "Abu" },
+    { email: "carmine@wirelesscom.ca", name: "Carmine" },
+  ] as const;
 
-  await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: { passwordHash },
-    create: { email: adminEmail, name: "Store Admin", passwordHash, role: seedRole },
-  });
-
-  // Ensure the seeded admin keeps SUPER_ADMIN privileges on fresh installs.
-  if (!existingSuperAdmin) {
-    await prisma.user.update({
-      where: { email: adminEmail },
-      data: { role: "SUPER_ADMIN" },
+  for (const admin of superAdmins) {
+    await prisma.user.upsert({
+      where: { email: admin.email },
+      update: { passwordHash, role: "SUPER_ADMIN", name: admin.name },
+      create: {
+        email: admin.email,
+        name: admin.name,
+        passwordHash,
+        role: "SUPER_ADMIN",
+      },
     });
   }
 
-  // Seed the site settings singleton if missing.
+  // Demote legacy example admin — not a real domain we control.
+  await prisma.user.updateMany({
+    where: { email: "admin@example.com" },
+    data: { role: "ADMIN" },
+  });
+
+  const legacyAdmin = await prisma.user.findUnique({
+    where: { email: "admin@example.com" },
+    select: { id: true },
+  });
+  if (legacyAdmin && process.env.REMOVE_EXAMPLE_ADMIN === "true") {
+    await prisma.user.delete({ where: { email: "admin@example.com" } });
+  }
+
+  // Optional extra admin from env (non-super).
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (adminEmail && !superAdmins.some((a) => a.email === adminEmail)) {
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { passwordHash },
+      create: { email: adminEmail, name: "Store Admin", passwordHash, role: "ADMIN" },
+    });
+  }
+
+  // Ensure the site settings singleton if missing.
   await prisma.siteSettings.upsert({
     where: { id: "singleton" },
     update: {},

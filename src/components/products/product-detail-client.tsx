@@ -21,6 +21,7 @@ import {
   getVariantPrice,
   type Currency,
 } from "@/lib/currency";
+import { parseVideoEmbedUrl } from "@/lib/video";
 
 type Variant = {
   id: string;
@@ -68,6 +69,7 @@ type ProductDetailClientProps = {
     allowCustomFrequency?: boolean;
     customTxRequired?: boolean;
     customRxRequired?: boolean;
+    youtubeUrl?: string | null;
   };
   options: Option[];
   variants: Variant[];
@@ -471,6 +473,21 @@ export function ProductDetailClient({
           </div>
         </div>
       </div>
+
+      {product.youtubeUrl && parseVideoEmbedUrl(product.youtubeUrl) && (
+        <div className="mt-14">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">Product Video</h2>
+          <div className="relative mt-4 aspect-video overflow-hidden rounded-2xl border border-slate-200 bg-black dark:border-slate-700">
+            <iframe
+              src={parseVideoEmbedUrl(product.youtubeUrl)!}
+              title={`${product.name} video`}
+              className="absolute inset-0 h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mt-14">

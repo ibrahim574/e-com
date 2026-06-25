@@ -24,18 +24,25 @@ export default auth((req: NextRequest & { auth: unknown }) => {
   const { pathname } = req.nextUrl;
   const ip = getClientIp(req.headers);
 
-  const rate = checkRateLimit(`admin:${ip}`, 100, 60_000);
-  if (pathname.startsWith("/admin") && !rate.allowed) {
-    return securityHeaders(
-      new NextResponse("Too many requests", { status: 429 }),
-    );
-  }
-
   const session = req.auth as { user?: { role?: string } } | null;
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isAdminLogin = pathname === "/admin/login";
   const isAdminUser =
     session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+
+  // Rate-limit only unauthenticated admin login — not every admin page load / server action.
+  if (pathname === "/admin/login" && !isAdminUser) {
+    const rate = checkRateLimit(`admin-login:${ip}`, 30, 60_000);
+    if (!rate.allowed) {
+      return securityHeaders(
+        new NextResponse("Too many requests. Please wait a moment and try again.", {
+          status: 429,
+        }),
+      );
+    }
+  }
+
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  const isAdminLogin = pathname === "/admin/login";
 
   if (isAdminRoute && !isAdminLogin && !isAdminUser) {
     const loginUrl = new URL("/admin/login", req.url);

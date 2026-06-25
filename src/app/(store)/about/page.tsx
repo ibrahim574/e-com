@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PARENT_COMPANY, PARENT_COMPANY_URL, SITE_NAME } from "@/lib/constants";
+import { PARENT_COMPANY, PARENT_COMPANY_URL, SITE_DOMAIN, SITE_NAME } from "@/lib/constants";
 
 export default function AboutPage() {
   return (
@@ -14,7 +14,7 @@ export default function AboutPage() {
           nationwide sales and support.
         </p>
         <p>
-          {SITE_NAME} is a sister concern of{" "}
+          {SITE_DOMAIN} is owned and operated by{" "}
           <Link
             href={PARENT_COMPANY_URL}
             target="_blank"

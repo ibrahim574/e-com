@@ -21,7 +21,7 @@ declare global {
         onApprove: (data: { orderID: string }) => Promise<void>;
         onCancel: () => void;
         onError: (err: unknown) => void;
-      }) => { render: (el: HTMLElement) => void };
+      }) => { render: (el: HTMLElement) => void; close?: () => void };
     };
   }
 }
@@ -95,13 +95,18 @@ export function CheckoutClient({
     if (!paypalClientId) return;
 
     const script = document.createElement("script");
-    script.src = `https://www.paypal.com/sdk/js?client-id=${paypalClientId}&currency=${currency}`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${currency}&intent=capture&components=buttons`;
     script.async = true;
+    script.dataset.namespace = "paypal_sdk";
     script.onload = () => setReady(true);
+    script.onerror = () => setError("Failed to load PayPal. Check your connection or client ID.");
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      setReady(false);
     };
   }, [paypalClientId, currency]);
 
@@ -110,7 +115,7 @@ export function CheckoutClient({
 
     paypalRef.current.innerHTML = "";
 
-    window.paypal
+    const buttons = window.paypal
       .Buttons({
         createOrder: async () => {
           setError(null);
@@ -120,8 +125,9 @@ export function CheckoutClient({
           const result = await createCheckoutOrderAction(formData);
 
           if (result.error || !result.paypalOrderId || !result.orderId) {
-            setError(result.error ?? "Failed to create order.");
-            throw new Error(result.error ?? "Failed to create order.");
+            const msg = result.error ?? "Failed to create order.";
+            setError(msg);
+            throw new Error(msg);
           }
 
           orderIdRef.current = result.orderId;
@@ -142,12 +148,25 @@ export function CheckoutClient({
             await cancelCheckoutOrderAction(orderIdRef.current);
           }
         },
-        onError: () => {
-          setError("PayPal checkout encountered an error.");
+        onError: (err) => {
+          const message =
+            err instanceof Error
+              ? err.message
+              : typeof err === "string"
+                ? err
+                : "PayPal checkout encountered an error.";
+          if (!message.includes("Form not ready")) {
+            setError(message);
+          }
         },
-      })
-      .render(paypalRef.current);
-  }, [ready, router]);
+      });
+
+    buttons.render(paypalRef.current);
+
+    return () => {
+      buttons.close?.();
+    };
+  }, [ready, router, currency, totalCents]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">

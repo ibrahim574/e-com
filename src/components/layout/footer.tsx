@@ -16,10 +16,10 @@ import {
   SITE_PHONE,
   PARENT_COMPANY,
   PARENT_COMPANY_URL,
+  SITE_DOMAIN,
   SITE_ADDRESS_LINES,
   SITE_MAP_EMBED_URL,
   SITE_MAP_LINK_URL,
-  PAYMENT_METHODS,
 } from "@/lib/constants";
 
 const socials = [
@@ -84,8 +84,8 @@ export function Footer({
             programming, and industry-ready kits — trusted by teams across the US
             and Canada.
           </p>
-          <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500">
-            A sister concern of{" "}
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+            {SITE_DOMAIN}, owned and operated by{" "}
             <a
               href={PARENT_COMPANY_URL}
               target="_blank"
@@ -189,11 +189,11 @@ export function Footer({
           <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
             Secure Payments
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-8">
             {[
-              { src: "/payment/visa.svg", alt: "Visa", w: 48, h: 16 },
-              { src: "/payment/mastercard.svg", alt: "Mastercard", w: 40, h: 26 },
-              { src: "/payment/paypal.svg", alt: "PayPal", w: 48, h: 14 },
+              { src: "/payment/visa.svg", alt: "Visa", w: 60, h: 20 },
+              { src: "/payment/mastercard.svg", alt: "Mastercard", w: 44, h: 28 },
+              { src: "/payment/paypal.svg", alt: "PayPal", w: 80, h: 22 },
             ].map((logo) => (
               <Image
                 key={logo.alt}
@@ -201,7 +201,7 @@ export function Footer({
                 alt={logo.alt}
                 width={logo.w}
                 height={logo.h}
-                className="h-7 w-auto grayscale transition hover:grayscale-0"
+                className="h-8 w-auto"
               />
             ))}
           </div>

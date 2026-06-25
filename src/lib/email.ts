@@ -1,5 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
-import { SITE_NAME, SITE_EMAIL } from "./constants";
+import { EMAIL_BRAND_NAME, SITE_EMAIL } from "./constants";
 import { getSiteSettings } from "./site-settings";
 import { decryptSecret } from "./crypto";
 import { redactForLog } from "./sanitize";
@@ -74,7 +74,7 @@ async function getTransporter(): Promise<Transporter | null> {
 async function fromAddress() {
   const settings = await getSiteSettings();
   if (settings.smtpFrom) return settings.smtpFrom;
-  return process.env.SMTP_FROM || `${SITE_NAME} <${SITE_EMAIL}>`;
+  return process.env.SMTP_FROM || `${EMAIL_BRAND_NAME} <${SITE_EMAIL}>`;
 }
 
 type SendEmailInput = {
@@ -145,9 +145,9 @@ export async function sendTestEmail(to: string) {
   const settings = await getSiteSettings();
   await sendEmail({
     to,
-    subject: `Test email from ${settings.companyName}`,
-    text: "This is a test email from your WirelessCom admin settings.",
-    html: `<p>This is a test email from your <strong>${settings.companyName}</strong> admin settings.</p>`,
+    subject: `Test email from ${EMAIL_BRAND_NAME}`,
+    text: `This is a test email from ${EMAIL_BRAND_NAME} admin settings.`,
+    html: `<p>This is a test email from <strong>${EMAIL_BRAND_NAME}</strong> admin settings.</p>`,
   });
 }
 
@@ -157,7 +157,7 @@ function otpEmailHtml(code: string) {
     <div style="max-width:480px;margin:0 auto;padding:32px 16px;">
       <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
         <div style="background:#1d4ed8;padding:24px 32px;">
-          <h1 style="margin:0;color:#ffffff;font-size:18px;font-weight:700;">${SITE_NAME}</h1>
+          <h1 style="margin:0;color:#ffffff;font-size:18px;font-weight:700;">${EMAIL_BRAND_NAME}</h1>
         </div>
         <div style="padding:32px;">
           <h2 style="margin:0 0 8px;color:#0f172a;font-size:20px;">Verify your email</h2>
@@ -175,7 +175,7 @@ function otpEmailHtml(code: string) {
         </div>
       </div>
       <p style="text-align:center;margin:16px 0 0;color:#94a3b8;font-size:12px;">
-        &copy; ${new Date().getFullYear()} ${SITE_NAME}
+        &copy; ${new Date().getFullYear()} ${EMAIL_BRAND_NAME}
       </p>
     </div>
   </div>`;
@@ -184,8 +184,8 @@ function otpEmailHtml(code: string) {
 export async function sendOtpEmail(to: string, code: string) {
   await sendEmail({
     to,
-    subject: `${code} is your ${SITE_NAME} verification code`,
-    text: `Your ${SITE_NAME} verification code is ${code}. It expires in 10 minutes.`,
+    subject: `${code} is your ${EMAIL_BRAND_NAME} verification code`,
+    text: `Your ${EMAIL_BRAND_NAME} verification code is ${code}. It expires in 10 minutes.`,
     html: otpEmailHtml(code),
   });
 }

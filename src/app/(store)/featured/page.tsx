@@ -1,6 +1,6 @@
 import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { parseVideoEmbedUrl } from "@/lib/email-templates";
 import { cacheGet, cacheSet } from "@/lib/cache";
 
 async function getFeaturedItems() {
@@ -24,7 +24,7 @@ export default async function FeaturedPage() {
   return (
     <div className="container-page py-10">
       <h1 className="section-title">Featured</h1>
-      <p className="mt-2 text-slate-600">
+      <p className="mt-2 text-slate-600 dark:text-slate-300">
         Highlights from our product lineup and industry solutions.
       </p>
 
@@ -33,39 +33,36 @@ export default async function FeaturedPage() {
       ) : (
         <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
-            const embed = item.videoUrl ? parseVideoEmbedUrl(item.videoUrl) : null;
-            return (
-              <article
-                key={item.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="relative aspect-video bg-slate-100">
-                  {embed ? (
-                    <iframe
-                      src={embed}
-                      title={item.title}
-                      className="absolute inset-0 h-full w-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : item.image ? (
+            const card = (
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div className="relative aspect-video bg-slate-100 dark:bg-slate-800">
+                  {item.image ? (
                     <Image
                       src={item.image}
                       alt={item.altText ?? item.title}
                       fill
+                      unoptimized={item.image.startsWith("/featured/uploads/")}
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-slate-400">
-                      No media
+                      No image
                     </div>
                   )}
                 </div>
                 <div className="p-4">
-                  <h2 className="font-bold text-slate-900">{item.title}</h2>
+                  <h2 className="font-bold text-slate-900 dark:text-white">{item.title}</h2>
                 </div>
               </article>
+            );
+
+            return item.linkUrl ? (
+              <Link key={item.id} href={item.linkUrl}>
+                {card}
+              </Link>
+            ) : (
+              <div key={item.id}>{card}</div>
             );
           })}
         </div>

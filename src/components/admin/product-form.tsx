@@ -43,6 +43,7 @@ type ProductFormProps = {
     heightCm?: number | null;
     weightGrams?: number | null;
     shippingClassId?: string | null;
+    youtubeUrl?: string | null;
   };
 };
 
@@ -139,6 +140,19 @@ export async function ProductForm({ product }: ProductFormProps) {
       </div>
 
       <ProductImageManager defaultImages={product?.images ?? []} />
+
+      <div>
+        <Label htmlFor="youtubeUrl">YouTube Video URL</Label>
+        <Input
+          id="youtubeUrl"
+          name="youtubeUrl"
+          placeholder="https://www.youtube.com/watch?v=..."
+          defaultValue={product?.youtubeUrl ?? ""}
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Optional product demo video visitors can play on the product page.
+        </p>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>

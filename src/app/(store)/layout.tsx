@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { ToastProvider } from "@/components/ui/toast-provider";
 import { getCart } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +30,7 @@ export default async function StoreLayout({
     cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
 
   return (
-    <>
+    <ToastProvider>
       <Header
         cartCount={cartCount}
         currency={currency}
@@ -44,6 +45,6 @@ export default async function StoreLayout({
         dualCurrency={settings.dualCurrencyEnabled}
         proudlyCanadianEnabled={settings.proudlyCanadianEnabled}
       />
-    </>
+    </ToastProvider>
   );
 }

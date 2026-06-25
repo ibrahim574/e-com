@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import {
   bulkDeleteProductsAction,
@@ -9,12 +10,14 @@ import {
 } from "@/app/actions/admin";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast-provider";
 
 type Product = {
   id: string;
   name: string;
   slug: string;
   status: string;
+  images: string[];
   priceCadCents: number;
   priceUsdCents: number;
   stock: number;
@@ -30,6 +33,7 @@ export function ProductsAdminList({
   dualCurrency: boolean;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { showToast } = useToast();
 
   function stockLabel(product: Product) {
     if (product.hasVariants) {
@@ -50,6 +54,7 @@ export function ProductsAdminList({
     }
     await action(fd);
     setSelected(new Set());
+    showToast("Bulk action completed.");
   }
 
   return (
@@ -82,6 +87,7 @@ export function ProductsAdminList({
           <thead className="bg-slate-50 text-left">
             <tr>
               <th className="px-4 py-3 w-8" />
+              <th className="px-4 py-3 w-16">Image</th>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">CAD</th>
@@ -108,6 +114,17 @@ export function ProductsAdminList({
                         });
                       }}
                     />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                      <Image
+                        src={product.images[0] ?? "/placeholder-product.svg"}
+                        alt=""
+                        fill
+                        className="object-contain p-1"
+                        sizes="48px"
+                      />
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{product.name}</p>

@@ -1,21 +1,20 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/product-form";
 import { VariantManager } from "@/components/admin/variant-manager";
+import { SavedToast } from "@/components/ui/saved-toast";
 
 export default async function EditProductPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string }>;
 }) {
   await requireAdmin();
 
   const { id } = await params;
-  const { saved } = await searchParams;
 
   const product = await prisma.product.findUnique({
     where: { id },
@@ -39,14 +38,14 @@ export default async function EditProductPage({
 
   return (
     <div>
+      <Suspense>
+        <SavedToast message="Product saved successfully." />
+      </Suspense>
       <div className="mb-6">
         <Link href="/admin/products" className="text-sm text-blue-600">
           ← Back to products
         </Link>
-        <h1 className="mt-2 text-3xl font-bold">Edit Product</h1>
-        {saved && (
-          <p className="mt-2 text-sm text-green-600">Product saved successfully.</p>
-        )}
+        <h1 className="mt-2 text-3xl font-bold dark:text-white">Edit Product</h1>
       </div>
       <ProductForm product={product} />
       <div className="mt-10">

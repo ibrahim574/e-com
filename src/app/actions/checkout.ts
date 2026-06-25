@@ -157,13 +157,20 @@ export async function createCheckoutOrderAction(formData: FormData) {
     });
 
     return { orderId: order.id, paypalOrderId };
-  } catch {
+  } catch (err) {
     await prisma.order.update({
       where: { id: order.id },
       data: { status: "CANCELLED" },
     });
     await markPaymentFailed(order.id);
-    return { error: "Unable to initialize PayPal checkout. Check PayPal credentials." };
+    const detail = err instanceof Error ? err.message : "Unknown error";
+    if (detail.includes("credentials")) {
+      return {
+        error:
+          "PayPal is not configured. Set PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, and NEXT_PUBLIC_PAYPAL_CLIENT_ID (same app, sandbox or live).",
+      };
+    }
+    return { error: `Unable to initialize PayPal checkout: ${detail}` };
   }
 }
 

@@ -14,6 +14,7 @@ import {
 } from "@/lib/product-images";
 import { isLoginLocked, recordLoginAttempt } from "@/lib/login-lockout";
 import { getClientIp } from "@/lib/rate-limit";
+import { sanitizeText } from "@/lib/sanitize";
 import { ProductStatus, OrderStatus } from "@prisma/client";
 
 export type ProductImageActionResult =
@@ -165,6 +166,7 @@ export async function saveProductAction(formData: FormData) {
     ? Math.round(Number(formData.get("weightGrams")))
     : null;
   const shippingClassId = String(formData.get("shippingClassId") ?? "").trim() || null;
+  const youtubeUrl = sanitizeText(String(formData.get("youtubeUrl") ?? ""), 500) || null;
 
   const data = {
     name,
@@ -196,6 +198,7 @@ export async function saveProductAction(formData: FormData) {
     heightCm,
     weightGrams,
     shippingClassId,
+    youtubeUrl,
   };
 
   let productId = id;

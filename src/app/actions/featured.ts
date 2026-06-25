@@ -8,21 +8,27 @@ import { saveFeaturedImageFile, deleteFeaturedImageFile } from "@/lib/featured-i
 import { sanitizeText } from "@/lib/sanitize";
 import { cacheInvalidate } from "@/lib/cache";
 
-export async function saveFeaturedItemAction(formData: FormData) {
+type ActionResult = { message?: string; error?: string };
+
+export async function saveFeaturedItemAction(formData: FormData): Promise<ActionResult> {
   const actor = await getActorOrThrow();
   const id = formData.get("id") ? String(formData.get("id")) : null;
   const title = sanitizeText(String(formData.get("title") ?? ""));
-  const videoUrl = sanitizeText(String(formData.get("videoUrl") ?? ""), 500) || null;
   const altText = sanitizeText(String(formData.get("altText") ?? ""), 200) || null;
+  const linkUrl = sanitizeText(String(formData.get("linkUrl") ?? ""), 500) || null;
   const position = Number(formData.get("position") ?? 0);
   const isActive = formData.get("isActive") === "on";
 
-  if (!title) return;
+  if (!title) return { error: "Title is required." };
 
   let image: string | null = null;
   const imageFile = formData.get("imageFile");
   if (imageFile instanceof File && imageFile.size > 0) {
-    image = await saveFeaturedImageFile(imageFile);
+    try {
+      image = await saveFeaturedImageFile(imageFile);
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : "Failed to upload image." };
+    }
   }
 
   if (id) {
@@ -34,8 +40,8 @@ export async function saveFeaturedItemAction(formData: FormData) {
       where: { id },
       data: {
         title,
-        videoUrl,
         altText,
+        linkUrl,
         position,
         isActive,
         ...(image ? { image } : {}),
@@ -43,7 +49,7 @@ export async function saveFeaturedItemAction(formData: FormData) {
     });
   } else {
     await prisma.featuredItem.create({
-      data: { title, videoUrl, altText, position, isActive, image },
+      data: { title, altText, linkUrl, position, isActive, image },
     });
   }
 
@@ -55,11 +61,13 @@ export async function saveFeaturedItemAction(formData: FormData) {
   });
 
   cacheInvalidate("featured-items");
+  revalidatePath("/");
   revalidatePath("/featured");
   revalidatePath("/admin/featured");
+  return { message: id ? "Featured item updated." : "Featured item added." };
 }
 
-export async function deleteFeaturedItemAction(formData: FormData) {
+export async function deleteFeaturedItemAction(formData: FormData): Promise<ActionResult> {
   const actor = await getActorOrThrow();
   const id = String(formData.get("id"));
   const item = await prisma.featuredItem.findUnique({ where: { id } });
@@ -75,6 +83,8 @@ export async function deleteFeaturedItemAction(formData: FormData) {
   });
 
   cacheInvalidate("featured-items");
+  revalidatePath("/");
   revalidatePath("/featured");
   revalidatePath("/admin/featured");
+  return { message: "Featured item deleted." };
 }
