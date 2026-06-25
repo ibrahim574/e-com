@@ -12,6 +12,7 @@ import {
   orderUpdateEmail,
 } from "@/lib/email-templates";
 import { formatPrice } from "@/lib/utils";
+import { EMAIL_BRAND_NAME } from "@/lib/constants";
 import { getRequestIp } from "@/lib/request-ip";
 import { onOrderPaid, onOrderPaidInTransaction } from "@/lib/accounting/on-order-paid";
 import { createOrRegenerateInvoice } from "@/lib/invoice/invoice-service";
@@ -137,7 +138,7 @@ async function orderEmail(
       orderTotal: formatPrice(order.totalCents, order.currency),
       orderSummary: summary,
       changeDescription,
-      companyName: settings.companyName,
+      companyName: EMAIL_BRAND_NAME,
     }),
   };
 }
@@ -340,6 +341,7 @@ export async function softDeleteOrderAction(formData: FormData) {
   });
 
   revalidatePath("/admin/orders");
+  revalidatePath("/admin");
 }
 
 export async function updateOrderItemQuantityAction(formData: FormData) {

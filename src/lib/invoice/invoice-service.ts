@@ -6,6 +6,7 @@ import { generateInvoicePdf } from "./generate-invoice-pdf";
 import { sendEmailWithAttachment } from "@/lib/email";
 import { getSiteSettings } from "@/lib/site-settings";
 import { invoiceEmail } from "@/lib/email-templates";
+import { EMAIL_BRAND_NAME } from "@/lib/constants";
 
 export async function createOrRegenerateInvoice(
   orderId: string,
@@ -76,12 +77,12 @@ export async function createOrRegenerateInvoice(
       customerName: order.shippingName,
       orderNumber: order.orderNumber,
       invoiceNumber: result.invoiceNumber,
-      companyName: siteSettings.companyName,
+      companyName: EMAIL_BRAND_NAME,
     });
     try {
       await sendEmailWithAttachment({
         to: customerEmail,
-        subject: `Invoice ${result.invoiceNumber} — ${siteSettings.companyName}`,
+        subject: `Invoice ${result.invoiceNumber} — ${EMAIL_BRAND_NAME}`,
         html,
         text,
         attachmentPath: result.pdfPath,
@@ -105,17 +106,16 @@ export async function emailInvoiceToCustomer(invoiceId: string): Promise<boolean
   const email = invoice.order.user?.email ?? invoice.order.guestEmail;
   if (!email) return false;
 
-  const siteSettings = await getSiteSettings();
   const { html, text } = invoiceEmail({
     customerName: invoice.order.shippingName,
     orderNumber: invoice.order.orderNumber,
     invoiceNumber: invoice.invoiceNumber,
-    companyName: siteSettings.companyName,
+    companyName: EMAIL_BRAND_NAME,
   });
 
   await sendEmailWithAttachment({
     to: email,
-    subject: `Invoice ${invoice.invoiceNumber} — ${siteSettings.companyName}`,
+    subject: `Invoice ${invoice.invoiceNumber} — ${EMAIL_BRAND_NAME}`,
     html,
     text,
     attachmentPath: invoice.pdfPath,

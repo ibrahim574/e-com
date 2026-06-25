@@ -63,14 +63,18 @@ export default async function AdminDashboardPage() {
     getFinancialKpis(range),
     getMonthlyRevenueChart(now.getFullYear(), "revenue"),
     getYearlyRevenueChart("revenue"),
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
+    prisma.order.groupBy({
+      by: ["status"],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    }),
     prisma.order.groupBy({
       by: ["currency"],
-      where: { status: { in: PAID_STATUSES } },
+      where: { deletedAt: null, status: { in: PAID_STATUSES } },
       _sum: { totalCents: true },
       _count: { _all: true },
     }),
-    prisma.order.count(),
+    prisma.order.count({ where: { deletedAt: null } }),
     prisma.product.count(),
     prisma.product.count({ where: { status: "ACTIVE" } }),
     prisma.category.count(),
@@ -78,6 +82,7 @@ export default async function AdminDashboardPage() {
     prisma.user.count({ where: { role: "CUSTOMER" } }),
     prisma.newsletterSubscriber.count(),
     prisma.order.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 6,
       include: { user: true, items: true },
@@ -96,7 +101,7 @@ export default async function AdminDashboardPage() {
     }),
     prisma.orderItem.groupBy({
       by: ["productId", "productName"],
-      where: { order: { status: { in: PAID_STATUSES } } },
+      where: { order: { deletedAt: null, status: { in: PAID_STATUSES } } },
       _sum: { quantity: true },
       orderBy: { _sum: { quantity: "desc" } },
       take: 5,

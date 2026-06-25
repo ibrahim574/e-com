@@ -10,6 +10,7 @@ import {
   preOrderConfirmationEmail,
 } from "@/lib/email-templates";
 import { sanitizeText, sanitizeEmail } from "@/lib/sanitize";
+import { EMAIL_BRAND_NAME } from "@/lib/constants";
 
 async function persistQuoteSubmission(data: {
   type: QuoteSubmissionType;
@@ -50,7 +51,7 @@ export async function submitQuoteRequestAction(formData: FormData) {
   const adminHtml = fieldsTable(fields);
   const customer = quoteConfirmationEmail({
     customerName: name,
-    companyName: settings.companyName,
+    companyName: EMAIL_BRAND_NAME,
   });
 
   const notesCombined = [company ? `Company: ${company}` : null, notes || null]
@@ -75,7 +76,7 @@ export async function submitQuoteRequestAction(formData: FormData) {
     }),
     sendEmail({
       to: email,
-      subject: `Thanks for reaching out — ${settings.companyName}`,
+      subject: `Thanks for reaching out — ${EMAIL_BRAND_NAME}`,
       html: customer.html,
       text: customer.text,
     }),
@@ -111,7 +112,7 @@ export async function submitPreOrderAction(formData: FormData) {
   const customer = preOrderConfirmationEmail({
     customerName: name,
     productName,
-    companyName: settings.companyName,
+    companyName: EMAIL_BRAND_NAME,
   });
 
   await persistQuoteSubmission({
@@ -133,7 +134,7 @@ export async function submitPreOrderAction(formData: FormData) {
     }),
     sendEmail({
       to: email,
-      subject: `We've received your pre-order request — ${settings.companyName}`,
+      subject: `We've received your pre-order request — ${EMAIL_BRAND_NAME}`,
       html: customer.html,
       text: customer.text,
     }),

@@ -26,7 +26,7 @@ const DEFAULTS = {
   dualCurrencyEnabled: true,
   taxLabel: "HST",
   taxRatePercent: 13,
-  companyName: "Hytera Radio - Operated by WirelessCom.ca Inc.",
+  companyName: "Hytera Radios - Operated by WirelessCom.ca Inc.",
   quoteRecipients: "abu@wirelesscom.ca, service@wirelesscom.ca",
   sessionTimeoutMinutes: 30,
   announcementText: "Free shipping available on eligible products and orders.",

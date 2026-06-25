@@ -3,7 +3,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
-import { getSiteSettings } from "@/lib/site-settings";
 import { validatePassword } from "@/lib/password-policy";
 import {
   createPasswordResetToken,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/password-reset";
 import { emailLayout } from "@/lib/email-templates";
 import { escapeHtml } from "@/lib/sanitize";
+import { EMAIL_BRAND_NAME } from "@/lib/constants";
 
 function resetEmailHtml(resetUrl: string, companyName: string) {
   const bodyHtml = `
@@ -50,17 +50,16 @@ export async function requestPasswordResetAction(formData: FormData) {
   }
 
   const token = await createPasswordResetToken(user.id);
-  const settings = await getSiteSettings();
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const resetUrl = `${origin}${basePath}?token=${token}`;
 
-  const html = resetEmailHtml(resetUrl, settings.companyName);
+  const html = resetEmailHtml(resetUrl, EMAIL_BRAND_NAME);
   const text = `Reset your password: ${resetUrl}\n\nThis link expires in 1 hour.`;
 
   try {
     await sendEmail({
       to: email,
-      subject: `Reset your ${settings.companyName} password`,
+      subject: `Reset your ${EMAIL_BRAND_NAME} password`,
       html,
       text,
     });

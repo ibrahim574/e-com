@@ -24,8 +24,10 @@ export default async function AdminOrdersPage({
   const activeStatus = isOrderStatus(status) ? status : null;
   const query = q.trim();
 
+  const activeOrdersWhere: Prisma.OrderWhereInput = { deletedAt: null };
+
   const where: Prisma.OrderWhereInput = {
-    deletedAt: null,
+    ...activeOrdersWhere,
     ...(activeStatus ? { status: activeStatus } : {}),
     ...(query
       ? {
@@ -53,8 +55,12 @@ export default async function AdminOrdersPage({
       include: { items: true, user: true },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.order.count(),
+    prisma.order.groupBy({
+      by: ["status"],
+      where: activeOrdersWhere,
+      _count: { _all: true },
+    }),
+    prisma.order.count({ where: activeOrdersWhere }),
   ]);
 
   const countFor = (s: OrderStatus) =>

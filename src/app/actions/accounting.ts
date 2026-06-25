@@ -13,6 +13,7 @@ import { createOrRegenerateInvoice } from "@/lib/invoice/invoice-service";
 import { sendEmail } from "@/lib/email";
 import { refundEmail } from "@/lib/email-templates";
 import { getSiteSettings } from "@/lib/site-settings";
+import { EMAIL_BRAND_NAME } from "@/lib/constants";
 import { formatPrice } from "@/lib/utils";
 import { generateReport, getReportPreview } from "@/lib/reports/generate";
 import type { ReportFormat, ReportType } from "@/lib/reports/generate";
@@ -476,11 +477,11 @@ export async function issueRefundAction(formData: FormData) {
       customerName: order.shippingName,
       orderNumber: order.orderNumber,
       refundAmount: formatPrice(amountCents, order.currency),
-      companyName: settings.companyName,
+      companyName: EMAIL_BRAND_NAME,
     });
     await sendEmail({
       to: customerEmail,
-      subject: `Your refund has been processed — ${settings.companyName}`,
+      subject: `Your refund has been processed — ${EMAIL_BRAND_NAME}`,
       html,
       text,
     });
