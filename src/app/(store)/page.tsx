@@ -6,7 +6,6 @@ import {
   Headphones,
   Star,
   Globe,
-  Radio,
   Zap,
   BadgeCheck,
   PhoneCall,
@@ -16,6 +15,7 @@ import { ProductCard } from "@/components/products/product-card";
 import { CategoryCard, IndustryCard } from "@/components/products/category-card";
 import { FeaturedTabs } from "@/components/products/featured-tabs";
 import { HeroCarousel } from "@/components/home/hero-carousel";
+import { HeroFeaturedProductPanel } from "@/components/home/hero-featured-product-panel";
 import { FeaturedItemsSection } from "@/components/home/featured-items-section";
 import { prisma } from "@/lib/prisma";
 import { getCurrency } from "@/lib/currency-server";
@@ -53,10 +53,39 @@ async function fetchFeatured() {
   });
 }
 
+async function getHeroFeaturedProducts() {
+  const cached =
+    cacheGet<Awaited<ReturnType<typeof fetchHeroFeaturedProducts>>>("hero-featured-products");
+  if (cached) return cached;
+  const products = await fetchHeroFeaturedProducts();
+  cacheSet("hero-featured-products", products);
+  return products;
+}
+
+async function fetchHeroFeaturedProducts() {
+  const entries = await prisma.heroFeaturedProduct.findMany({
+    where: { product: { status: "ACTIVE" } },
+    orderBy: { position: "asc" },
+    include: {
+      product: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          brand: true,
+          shortDescription: true,
+          images: true,
+        },
+      },
+    },
+  });
+  return entries.map((e) => e.product);
+}
+
 export default async function HomePage() {
   const currency = await getCurrency();
 
-  const [newArrivals, bestSellers, categories, industries, reviews, heroSlides, featuredItems] =
+  const [newArrivals, bestSellers, categories, industries, reviews, heroSlides, featuredItems, heroFeaturedProducts] =
     await Promise.all([
       prisma.product.findMany({
         where: { status: "ACTIVE", isNewArrival: true },
@@ -77,6 +106,7 @@ export default async function HomePage() {
       }),
       getHeroSlides(),
       getFeaturedItems(),
+      getHeroFeaturedProducts(),
     ]);
 
   const valueProps = [
@@ -92,16 +122,13 @@ export default async function HomePage() {
     { value: "4.9/5", label: "Customer rating" },
   ];
 
-  const showDefaultHero = heroSlides.length === 0;
-
   return (
     <>
       {heroSlides.length > 0 ? (
         <HeroCarousel slides={heroSlides} />
       ) : null}
 
-      {/* HERO */}
-      {showDefaultHero && (
+      {/* HERO — always show copy + featured product panel */}
       <section className="hero-light relative overflow-hidden border-b border-slate-200 dark:border-slate-800">
         <div className="container-page relative grid items-center gap-12 py-16 lg:grid-cols-2 lg:py-24">
           <div className="animate-fade-up">
@@ -139,30 +166,9 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="animate-fade-up [animation-delay:120ms]">
-            <div className="relative mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                  <Star className="h-3 w-3 fill-current" /> Featured
-                </span>
-                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Nationwide PoC</span>
-              </div>
-              <div className="mt-6 grid place-items-center rounded-2xl bg-gradient-to-b from-slate-50 to-white py-10 dark:from-slate-800 dark:to-slate-900">
-                <Radio className="h-28 w-28 text-blue-500" strokeWidth={1.2} />
-              </div>
-              <h3 className="mt-6 text-xl font-bold text-slate-900 dark:text-white">Hytera PDC680 Dual-Mode Radio</h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                All-in-one LTE &amp; DMR terminal with a 3.6&quot; touchscreen,
-                AI noise cancellation, and nationwide push-to-talk.
-              </p>
-              <Button className="mt-5 w-full" asChild>
-                <Link href="/products/hytera-pdc680-dual-mode-radio">View Product</Link>
-              </Button>
-            </div>
-          </div>
+          <HeroFeaturedProductPanel products={heroFeaturedProducts} />
         </div>
       </section>
-      )}
 
       {/* VALUE PROPS */}
       <section className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
