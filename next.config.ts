@@ -8,7 +8,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "frame-src 'self' https://*.paypal.com https://*.paypalobjects.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+  "frame-src 'self' https://*.paypal.com https://*.paypalobjects.com https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.google.com https://maps.google.com",
   "connect-src 'self' https://*.paypal.com https://*.paypalobjects.com",
   "object-src 'none'",
   "base-uri 'self'",

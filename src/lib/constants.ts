@@ -18,9 +18,9 @@ export const SITE_ADDRESS_LINES = [
 
 export const SITE_ADDRESS_QUERY = "WirelessCom.ca Inc, 97 White Oak Drive East, Sault Ste. Marie, ON P6B 4J7";
 
-export const SITE_MAP_EMBED_URL = `https://www.google.com/maps?q=${encodeURIComponent(
+export const SITE_MAP_EMBED_URL = `https://maps.google.com/maps?q=${encodeURIComponent(
   SITE_ADDRESS_QUERY,
-)}&output=embed`;
+)}&z=15&hl=en&output=embed`;
 
 export const SITE_MAP_LINK_URL = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
   SITE_ADDRESS_QUERY,
