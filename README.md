@@ -243,12 +243,22 @@ The script writes `.env` from the snapshot (if none exists), restores uploaded f
 
 ## Connecting to the database (external client)
 
-The Postgres container publishes port `5432`, bound to `127.0.0.1` by default, so it is **not** reachable from the public internet. Connection details:
+By default, Postgres is **not** published on the host (the app uses the internal Docker network `db:5432`). To reach it from pgAdmin/DBeaver, add the optional tunnel override when starting the stack:
+
+```bash
+docker compose -f docker-compose.public.yml -f docker-compose.db-tunnel.yml up -d
+# or for prod:
+docker compose -f docker-compose.prod.yml -f docker-compose.db-tunnel.yml up -d
+```
+
+If host port `5432` is already in use, set `DB_PUBLISH_PORT=5433` in `.env` / `.env.public` first.
+
+Connection details (via SSH tunnel):
 
 | Field | Value |
 |-------|-------|
 | Host | `127.0.0.1` (via SSH tunnel) |
-| Port | `5432` |
+| Port | `5432` (or `DB_PUBLISH_PORT`) |
 | Database | `radio_store` (or `POSTGRES_DB`) |
 | User | `postgres` (or `POSTGRES_USER`) |
 | Password | `POSTGRES_PASSWORD` from `.env` |
@@ -268,10 +278,11 @@ Only if you understand the risk. Set a strong password and open the port in the 
 
 ```env
 DB_PUBLISH_ADDR=0.0.0.0
+DB_PUBLISH_PORT=5432
 POSTGRES_PASSWORD=<strong-password>
 ```
 
-Then `docker compose -f docker-compose.prod.yml up -d`. Prefer the SSH tunnel instead.
+Then start with `-f docker-compose.db-tunnel.yml`. Prefer the SSH tunnel instead.
 
 ## Useful Commands
 

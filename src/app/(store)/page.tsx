@@ -245,7 +245,7 @@ export default async function HomePage() {
           </Reveal>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category, i) => (
-              <Reveal key={category.id} delay={i * 70} variant="scale">
+              <Reveal key={category.id} delay={i * 70} variant="up" className="h-full w-full">
                 <CategoryCard {...category} />
               </Reveal>
             ))}
@@ -261,7 +261,7 @@ export default async function HomePage() {
         </Reveal>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {industries.map((industry, i) => (
-            <Reveal key={industry.id} delay={i * 70} variant="scale">
+            <Reveal key={industry.id} delay={i * 70} variant="up" className="h-full w-full">
               <IndustryCard {...industry} />
             </Reveal>
           ))}

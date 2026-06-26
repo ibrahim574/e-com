@@ -55,7 +55,7 @@ export function Reveal({
   return (
     <div
       ref={ref}
-      className={cn("reveal", variantClass, visible && "is-visible", className)}
+      className={cn("reveal w-full", variantClass, visible && "is-visible", className)}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}

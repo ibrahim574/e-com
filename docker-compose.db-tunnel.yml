@@ -1,0 +1,12 @@
+# Optional override: publish Postgres on the host for pgAdmin / DBeaver via SSH tunnel.
+# The app does NOT need this — it reaches db:5432 on the Docker network.
+#
+# Usage:
+#   docker compose -f docker-compose.public.yml -f docker-compose.db-tunnel.yml up -d
+#
+# If host port 5432 is taken, set DB_PUBLISH_PORT=5433 in .env.public first.
+
+services:
+  db:
+    ports:
+      - "${DB_PUBLISH_ADDR:-127.0.0.1}:${DB_PUBLISH_PORT:-5432}:5432"
