@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { UserCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { isAdminRole, isSuperAdminRole } from "@/lib/admin-guard";
 import { getSiteSettings } from "@/lib/site-settings";
 import { AdminNavMobile, AdminNavSidebar } from "@/components/admin/admin-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ToastProvider } from "@/components/ui/toast-provider";
 import { SiteLogo } from "@/components/layout/site-logo";
+import { Avatar } from "@/components/ui/avatar";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,13 @@ export default async function AdminLayout({
   const isAdmin = isAdminRole(session?.user?.role);
   const isSuper = isSuperAdminRole(session?.user?.role);
   const settings = isAdmin ? await getSiteSettings() : null;
+  const adminProfile =
+    isAdmin && session?.user?.id
+      ? await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { name: true, avatarUrl: true },
+        })
+      : null;
 
   return (
     <ToastProvider>
@@ -46,10 +54,15 @@ export default async function AdminLayout({
                 <ThemeToggle />
                 <Link
                   href="/admin/account"
-                  className="hidden items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium sm:inline-flex dark:border-slate-700 dark:text-slate-300"
+                  className="hidden items-center gap-1.5 rounded-lg border border-slate-300 py-1 pl-1 pr-3 text-sm font-medium sm:inline-flex dark:border-slate-700 dark:text-slate-300"
                   title={session?.user?.email}
                 >
-                  <UserCircle className="h-4 w-4" />
+                  <Avatar
+                    src={adminProfile?.avatarUrl}
+                    name={adminProfile?.name}
+                    email={session?.user?.email}
+                    size={28}
+                  />
                   <span className="max-w-[140px] truncate">{session?.user?.email}</span>
                 </Link>
                 <Link

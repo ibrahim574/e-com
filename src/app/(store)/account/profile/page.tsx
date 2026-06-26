@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ProfileForm } from "@/components/account/profile-form";
+import { AvatarUploader } from "@/components/account/avatar-uploader";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function AccountProfilePage() {
     select: {
       name: true,
       email: true,
+      avatarUrl: true,
       phone: true,
       addressLine1: true,
       addressLine2: true,
@@ -46,7 +48,14 @@ export default async function AccountProfilePage() {
         </p>
       </div>
 
-      <ProfileForm defaults={profile} />
+      <div className="space-y-6">
+        <AvatarUploader
+          avatarUrl={profile.avatarUrl}
+          name={profile.name}
+          email={profile.email}
+        />
+        <ProfileForm defaults={profile} />
+      </div>
     </div>
   );
 }

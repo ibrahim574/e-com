@@ -21,6 +21,7 @@ import {
   FileBarChart,
   MessageSquare,
   Images,
+  DatabaseBackup,
   Menu,
   X,
 } from "lucide-react";
@@ -54,7 +55,11 @@ type AdminLink = {
 
 function useAdminLinks(isSuperAdmin: boolean): AdminLink[] {
   return isSuperAdmin
-    ? [...baseLinks, { href: "/admin/audit", label: "Audit", icon: ClipboardList }]
+    ? [
+        ...baseLinks,
+        { href: "/admin/audit", label: "Audit", icon: ClipboardList },
+        { href: "/admin/backup", label: "Backup", icon: DatabaseBackup },
+      ]
     : [...baseLinks];
 }
 

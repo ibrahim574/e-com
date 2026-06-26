@@ -18,7 +18,16 @@ import { formatPrice } from "@/lib/utils";
 import { generateReport, getReportPreview } from "@/lib/reports/generate";
 import type { ReportFormat, ReportType } from "@/lib/reports/generate";
 import { EXPENSES_DIR, INVOICE_LOGOS_DIR } from "@/lib/storage-paths";
+import {
+  DOCUMENT_MIME_TYPES,
+  IMAGE_MIME_TYPES,
+  extForMime,
+  validateUploadFile,
+} from "@/lib/upload-validation";
 import type { ExpensePaymentStatus, RefundType } from "@prisma/client";
+
+const MAX_INVOICE_LOGO_BYTES = 2 * 1024 * 1024;
+const MAX_EXPENSE_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 function parseDateRange(formData: FormData) {
   const fromStr = String(formData.get("from") ?? "");
@@ -227,8 +236,16 @@ export async function updateInvoiceSettingsAction(formData: FormData) {
 
   const logo = formData.get("logo") as File | null;
   if (logo && logo.size > 0) {
+    const logoError = validateUploadFile(logo, {
+      allowed: IMAGE_MIME_TYPES,
+      maxBytes: MAX_INVOICE_LOGO_BYTES,
+      label: "Logo",
+    });
+    if (logoError) {
+      return { error: logoError };
+    }
     await fs.mkdir(INVOICE_LOGOS_DIR, { recursive: true });
-    const ext = path.extname(logo.name) || ".png";
+    const ext = extForMime(logo.type, ".png");
     const logoPath = path.join(INVOICE_LOGOS_DIR, `logo${ext}`);
     const buf = Buffer.from(await logo.arrayBuffer());
     await fs.writeFile(logoPath, buf);
@@ -311,6 +328,14 @@ export async function createExpenseAction(formData: FormData) {
   let attachmentPath: string | null = null;
   const file = formData.get("attachment") as File | null;
   if (file && file.size > 0) {
+    const attachmentError = validateUploadFile(file, {
+      allowed: DOCUMENT_MIME_TYPES,
+      maxBytes: MAX_EXPENSE_ATTACHMENT_BYTES,
+      label: "Attachment",
+    });
+    if (attachmentError) {
+      return { error: attachmentError };
+    }
     await fs.mkdir(EXPENSES_DIR, { recursive: true });
     const safeName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     attachmentPath = path.join(EXPENSES_DIR, safeName);
@@ -519,13 +544,6 @@ export async function downloadReportAction(formData: FormData) {
   const format = String(formData.get("format") ?? "csv") as ReportFormat;
   const range = parseDateRange(formData);
   return generateReport(type, range, format);
-}
-
-export async function exportLedgerAction(formData: FormData) {
-  await getActorOrThrow();
-  const format = String(formData.get("format") ?? "csv") as ReportFormat;
-  const range = parseDateRange(formData);
-  return generateReport("sales", range, format);
 }
 
 export async function exportAuditLogAction() {

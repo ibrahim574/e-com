@@ -11,6 +11,7 @@ import {
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast-provider";
+import { ConfirmButton } from "@/components/ui/confirm-dialog";
 
 type Product = {
   id: string;
@@ -52,9 +53,24 @@ export function ProductsAdminList({
     if (extra) {
       for (const [k, v] of Object.entries(extra)) fd.set(k, v);
     }
-    await action(fd);
+    const result = await action(fd);
     setSelected(new Set());
-    showToast("Bulk action completed.");
+    if (result?.error) showToast(result.error, "error");
+    else showToast("Bulk action completed.");
+  }
+
+  async function deleteProduct(id: string) {
+    const fd = new FormData();
+    fd.set("id", id);
+    try {
+      const result = (await deleteProductAction(fd)) as
+        | { error?: string }
+        | undefined;
+      if (result?.error) showToast(result.error, "error");
+      else showToast("Product deleted.");
+    } catch {
+      showToast("Could not delete product.", "error");
+    }
   }
 
   return (
@@ -68,21 +84,19 @@ export function ProductsAdminList({
           <Button type="button" size="sm" variant="outline" onClick={() => runBulk(bulkSetProductStatusAction, { status: "DRAFT" })}>
             Unpublish
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="text-red-600"
-            onClick={() => {
-              if (confirm("Delete selected products?")) runBulk(bulkDeleteProductsAction);
-            }}
+          <ConfirmButton
+            message={`Delete ${selected.size} selected product${selected.size === 1 ? "" : "s"}? This cannot be undone.`}
+            title="Delete products"
+            confirmLabel="Delete"
+            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40"
+            onConfirm={() => runBulk(bulkDeleteProductsAction)}
           >
             Delete
-          </Button>
+          </ConfirmButton>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-left">
             <tr>
@@ -144,12 +158,15 @@ export function ProductsAdminList({
                       <Link href={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:underline">
                         Edit
                       </Link>
-                      <form action={deleteProductAction}>
-                        <input type="hidden" name="id" value={product.id} />
-                        <button type="submit" className="text-red-600 hover:underline">
-                          Delete
-                        </button>
-                      </form>
+                      <ConfirmButton
+                        message={`Delete "${product.name}"? This cannot be undone.`}
+                        title="Delete product"
+                        confirmLabel="Delete"
+                        className="text-red-600 hover:underline"
+                        onConfirm={() => deleteProduct(product.id)}
+                      >
+                        Delete
+                      </ConfirmButton>
                     </div>
                   </td>
                 </tr>

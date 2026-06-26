@@ -11,6 +11,7 @@ import {
 import { emailLayout } from "@/lib/email-templates";
 import { escapeHtml } from "@/lib/sanitize";
 import { EMAIL_BRAND_NAME } from "@/lib/constants";
+import { rateLimitAction } from "@/lib/action-rate-limit";
 
 function resetEmailHtml(resetUrl: string, companyName: string) {
   const bodyHtml = `
@@ -26,6 +27,11 @@ function resetEmailHtml(resetUrl: string, companyName: string) {
 }
 
 export async function requestPasswordResetAction(formData: FormData) {
+  const limited = await rateLimitAction("password-reset", 5, 60_000);
+  if (limited) {
+    return { error: limited };
+  }
+
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const isAdmin = formData.get("admin") === "true";
   const basePath = isAdmin ? "/admin/reset-password" : "/account/reset-password";

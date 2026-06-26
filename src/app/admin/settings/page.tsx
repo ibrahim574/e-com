@@ -24,6 +24,15 @@ export default async function AdminSettingsPage() {
 
   const isSuperAdmin = isSuperAdminRole(session?.user?.role);
 
+  const publicClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
+  const paypalStatus = {
+    clientIdSet: !!process.env.PAYPAL_CLIENT_ID,
+    secretSet: !!process.env.PAYPAL_CLIENT_SECRET,
+    publicClientIdSet: !!publicClientId,
+    mode: process.env.PAYPAL_MODE === "live" ? ("live" as const) : ("sandbox" as const),
+    publicClientIdLast4: publicClientId ? publicClientId.slice(-4) : null,
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -44,6 +53,7 @@ export default async function AdminSettingsPage() {
         shippingZones={shippingZones}
         invoiceSettings={invoiceSettings}
         isSuperAdmin={isSuperAdmin}
+        paypalStatus={paypalStatus}
       />
     </div>
   );

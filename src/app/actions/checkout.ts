@@ -10,6 +10,7 @@ import { getShippingCentsForCountry } from "@/lib/shipping";
 import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
 import { generateOrderNumber } from "@/lib/utils";
 import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal";
+import { rateLimitAction } from "@/lib/action-rate-limit";
 import {
   onOrderPaid,
   onOrderPaidInTransaction,
@@ -18,6 +19,11 @@ import {
 } from "@/lib/accounting/on-order-paid";
 
 export async function createCheckoutOrderAction(formData: FormData) {
+  const limited = await rateLimitAction("checkout-create", 30, 60_000);
+  if (limited) {
+    return { error: limited };
+  }
+
   const session = await auth();
   const currency = await getCurrency();
   const cart = await getOrCreateCart();

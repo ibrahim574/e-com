@@ -5,8 +5,50 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { validatePassword } from "@/lib/password-policy";
+import { saveAvatarFile, deleteAvatarFile } from "@/lib/avatar-server";
 
 const COUNTRY_DEFAULT = "CA";
+
+export async function updateCustomerAvatarAction(formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "You must be signed in." };
+  }
+
+  const file = formData.get("avatar") as File | null;
+  if (!file || file.size === 0) {
+    return { error: "Please choose an image to upload." };
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { avatarUrl: true },
+  });
+
+  let avatarUrl: string;
+  try {
+    avatarUrl = await saveAvatarFile(file);
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { avatarUrl },
+  });
+
+  if (existing?.avatarUrl && existing.avatarUrl !== avatarUrl) {
+    try {
+      await deleteAvatarFile(existing.avatarUrl);
+    } catch {
+      // best-effort cleanup
+    }
+  }
+
+  revalidatePath("/account");
+  revalidatePath("/account/profile");
+  return { success: true, avatarUrl };
+}
 
 export async function changeCustomerPasswordAction(formData: FormData) {
   const session = await auth();

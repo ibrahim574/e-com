@@ -17,6 +17,7 @@ import { FeaturedTabs } from "@/components/products/featured-tabs";
 import { HeroCarousel } from "@/components/home/hero-carousel";
 import { HeroFeaturedProductPanel } from "@/components/home/hero-featured-product-panel";
 import { FeaturedItemsSection } from "@/components/home/featured-items-section";
+import { Reveal } from "@/components/ui/reveal";
 import { prisma } from "@/lib/prisma";
 import { getCurrency } from "@/lib/currency-server";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -173,12 +174,13 @@ export default async function HomePage() {
       {/* VALUE PROPS */}
       <section className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="container-page grid gap-px overflow-hidden rounded-2xl sm:grid-cols-2 lg:grid-cols-4 lg:py-0">
-          {valueProps.map((vp) => (
-            <div
+          {valueProps.map((vp, i) => (
+            <Reveal
               key={vp.title}
+              delay={i * 90}
               className="flex items-start gap-4 bg-white px-2 py-8 lg:px-6 dark:bg-slate-900"
             >
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600 transition-transform duration-300 hover:scale-110 dark:bg-blue-950">
                 <vp.icon className="h-5 w-5" />
               </span>
               <div>
@@ -187,7 +189,7 @@ export default async function HomePage() {
                   {vp.desc}
                 </p>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
@@ -196,7 +198,7 @@ export default async function HomePage() {
 
       {/* FEATURED PRODUCTS */}
       <section className="container-page py-16 lg:py-20">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+        <Reveal className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div>
             <p className="eyebrow">Handpicked for you</p>
             <h2 className="section-title mt-2">Featured Products</h2>
@@ -208,9 +210,9 @@ export default async function HomePage() {
             View all products
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </Link>
-        </div>
+        </Reveal>
 
-        <div className="mt-8">
+        <Reveal delay={80} className="mt-8">
           <FeaturedTabs
             bestSellers={
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -227,23 +229,25 @@ export default async function HomePage() {
               </div>
             }
           />
-        </div>
+        </Reveal>
       </section>
 
       {/* SHOP BY CATEGORY */}
       <section className="bg-slate-50 py-16 lg:py-20 dark:bg-slate-950">
         <div className="container-page">
-          <div className="text-center">
+          <Reveal className="text-center">
             <p className="eyebrow">Find the right gear</p>
             <h2 className="section-title mt-2">Shop by Category</h2>
             <p className="mx-auto mt-3 max-w-2xl text-slate-600 dark:text-slate-300">
               From compact business radios to professional MOTOTRBO portfolios —
               there&apos;s a solution for every team.
             </p>
-          </div>
+          </Reveal>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} {...category} />
+            {categories.map((category, i) => (
+              <Reveal key={category.id} delay={i * 70} variant="scale">
+                <CategoryCard {...category} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -251,20 +255,22 @@ export default async function HomePage() {
 
       {/* INDUSTRIES */}
       <section className="container-page py-16 lg:py-20">
-        <div className="text-center">
+        <Reveal className="text-center">
           <p className="eyebrow">Tailored solutions</p>
           <h2 className="section-title mt-2">Built for Your Industry</h2>
-        </div>
+        </Reveal>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {industries.map((industry) => (
-            <IndustryCard key={industry.id} {...industry} />
+          {industries.map((industry, i) => (
+            <Reveal key={industry.id} delay={i * 70} variant="scale">
+              <IndustryCard {...industry} />
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* PROMO CTA */}
       <section className="container-page pb-16 lg:pb-20">
-        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-8 py-14 shadow-sm lg:px-16 dark:border-slate-700 dark:bg-slate-900">
+        <Reveal variant="scale" className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-8 py-14 shadow-sm lg:px-16 dark:border-slate-700 dark:bg-slate-900">
           <div className="dot-grid absolute inset-0 opacity-70" />
           <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-50 blur-2xl dark:bg-blue-950" />
           <div className="relative grid items-center gap-8 lg:grid-cols-2">
@@ -289,13 +295,13 @@ export default async function HomePage() {
               </Button>
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
 
       {/* REVIEWS */}
       <section className="bg-slate-50 py-16 lg:py-20 dark:bg-slate-950">
         <div className="container-page">
-          <div className="text-center">
+          <Reveal className="text-center">
             <div className="mb-3 flex items-center justify-center gap-1 text-amber-400">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star key={i} className="h-5 w-5 fill-current" />
@@ -303,12 +309,14 @@ export default async function HomePage() {
             </div>
             <p className="eyebrow">Trusted by thousands</p>
             <h2 className="section-title mt-2">What Our Customers Say</h2>
-          </div>
+          </Reveal>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
-            {reviews.map((review) => (
-              <figure
+            {reviews.map((review, i) => (
+              <Reveal
                 key={review.id}
-                className="card-surface flex flex-col p-6"
+                delay={i * 80}
+                variant={i % 2 === 0 ? "left" : "right"}
+                className="card-surface flex flex-col p-6 transition-shadow duration-300 hover:shadow-lg"
               >
                 <div className="mb-3 flex gap-1 text-amber-400">
                   {Array.from({ length: review.rating }).map((_, i) => (
@@ -323,7 +331,7 @@ export default async function HomePage() {
                   {review.author}
                   <span className="font-normal text-slate-400">· Verified Buyer</span>
                 </figcaption>
-              </figure>
+              </Reveal>
             ))}
           </div>
         </div>

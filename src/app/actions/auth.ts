@@ -9,6 +9,7 @@ import { mergeGuestCart } from "@/lib/cart";
 import { sendOtpEmail } from "@/lib/email";
 import { isLoginLocked, recordLoginAttempt } from "@/lib/login-lockout";
 import { getRequestIp } from "@/lib/request-ip";
+import { rateLimitAction } from "@/lib/action-rate-limit";
 import { validatePassword } from "@/lib/password-policy";
 import {
   compareOtp,
@@ -23,6 +24,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Step 1 of signup: validate details, store a pending registration, email an OTP. */
 export async function startRegistrationAction(formData: FormData) {
+  const limited = await rateLimitAction("register", 10, 60_000);
+  if (limited) {
+    return { error: limited };
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const password = String(formData.get("password") ?? "");
@@ -182,6 +188,11 @@ export async function verifyOtpAction(email: string, code: string) {
 }
 
 export async function loginAction(formData: FormData) {
+  const limited = await rateLimitAction("login", 20, 60_000);
+  if (limited) {
+    return { error: limited };
+  }
+
   const email = String(formData.get("email") ?? "").toLowerCase().trim();
   const password = String(formData.get("password") ?? "");
   const callbackUrl = String(formData.get("callbackUrl") ?? "/account");

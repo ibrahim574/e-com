@@ -78,6 +78,7 @@ model User {
   passwordHash String
   name         String?
   role         UserRole @default(CUSTOMER)
+  avatarUrl    String?
   phone        String?
   addressLine1   String?
   addressLine2   String?
@@ -490,6 +491,7 @@ model SiteSettings {
   announcementEnabled   Boolean  @default(true)
   proudlyCanadianEnabled Boolean @default(true)
   siteLogoUrl           String?
+  siteFaviconUrl        String?
   updatedAt             DateTime @updatedAt
 }
 

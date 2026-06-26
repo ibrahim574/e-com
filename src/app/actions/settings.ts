@@ -12,6 +12,10 @@ import {
   deleteSiteLogoFile,
   saveSiteLogoFile,
 } from "@/lib/site-logo-server";
+import {
+  deleteFaviconFile,
+  saveFaviconFile,
+} from "@/lib/site-favicon-server";
 
 export async function updateSiteSettingsAction(formData: FormData) {
   const actor = await getActorOrThrow();
@@ -118,7 +122,9 @@ export async function updateSiteSettingsAction(formData: FormData) {
     });
   } else if (section === "branding") {
     const resetLogo = formData.get("resetLogo") === "on";
+    const resetFavicon = formData.get("resetFavicon") === "on";
     const update: Record<string, unknown> = {};
+    const changes: string[] = [];
 
     if (resetLogo && before?.siteLogoUrl) {
       await deleteSiteLogoFile(before.siteLogoUrl);
@@ -139,9 +145,41 @@ export async function updateSiteSettingsAction(formData: FormData) {
         };
       }
     }
+    if (resetLogo || (logo && logo.size > 0)) {
+      changes.push(resetLogo && !(logo && logo.size > 0) ? "logo reset" : "logo updated");
+    }
 
-    if (!resetLogo && !(logo && logo.size > 0)) {
-      return { error: "Choose a logo file to upload, or check reset to default." };
+    if (resetFavicon && before?.siteFaviconUrl) {
+      await deleteFaviconFile(before.siteFaviconUrl);
+      update.siteFaviconUrl = null;
+    }
+
+    const favicon = formData.get("siteFavicon") as File | null;
+    if (favicon && favicon.size > 0) {
+      try {
+        const siteFaviconUrl = await saveFaviconFile(favicon);
+        if (before?.siteFaviconUrl) {
+          await deleteFaviconFile(before.siteFaviconUrl);
+        }
+        update.siteFaviconUrl = siteFaviconUrl;
+      } catch (err) {
+        return {
+          error: err instanceof Error ? err.message : "Could not upload favicon.",
+        };
+      }
+    }
+    if (resetFavicon || (favicon && favicon.size > 0)) {
+      changes.push(
+        resetFavicon && !(favicon && favicon.size > 0)
+          ? "favicon reset"
+          : "favicon updated",
+      );
+    }
+
+    if (changes.length === 0) {
+      return {
+        error: "Choose a logo or favicon file to upload, or check reset to default.",
+      };
     }
 
     await prisma.siteSettings.upsert({
@@ -154,7 +192,7 @@ export async function updateSiteSettingsAction(formData: FormData) {
       action: "SETTING",
       entityType: "SiteSettings",
       entityId: "singleton",
-      summary: resetLogo ? "Site logo reset to default" : "Site logo updated",
+      summary: `Branding: ${changes.join(", ")}`,
     });
   } else if (section === "general") {
     const announcementText = sanitizeText(

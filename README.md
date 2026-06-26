@@ -104,6 +104,29 @@ NEXT_PUBLIC_PAYPAL_CLIENT_ID=your-sandbox-client-id
 
 With `PAYPAL_MODE=sandbox`, the server uses PayPal's sandbox API — no real money is charged. Test buyers use sandbox accounts at https://sandbox.paypal.com. Your database will still record orders as paid (that is your app's state, not a real transaction). Use sandbox credentials only until you intentionally switch to live.
 
+### Going live (boss checklist)
+
+To start accepting real payments, edit `.env` on the server and set all four values from your **Live** PayPal app, then restart — no rebuild needed:
+
+```env
+PAYPAL_MODE=live
+PAYPAL_CLIENT_ID=<live client id>
+PAYPAL_CLIENT_SECRET=<live secret>
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=<same live client id>
+```
+
+```bash
+# apply the new .env and restart the running app
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Then confirm at **Admin → Settings → Payments** that all three keys show "Set" and the mode is "live". The PayPal button on `/checkout` should render immediately.
+
+Security notes:
+- `PAYPAL_CLIENT_SECRET` is server-only and is never sent to the browser or shown in the admin panel.
+- Keep `.env` private: `chmod 600 .env` and never commit it.
+- The three keys must all belong to the same PayPal app and the same mode (live vs sandbox).
+
 ## Public Testing (Cloudflare)
 
 Use this when the site is behind Cloudflare's orange-cloud proxy. It runs a **production build** on port 80 (no dev auto-reload, buttons work from remote PCs).
@@ -197,6 +220,58 @@ docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 Caddy will obtain TLS certificates automatically when `DOMAIN` points to your server.
+
+## Backup &amp; Restore
+
+A super-admin can download a complete snapshot from **Admin → Backup**. The archive (`backup-<timestamp>.tar.gz`) contains:
+
+- a full PostgreSQL dump (`db.sql`, created with `--clean --if-exists`),
+- every upload directory (`public/{products,hero,featured,site}/uploads`, `uploads/`),
+- an `.env.backup` snapshot of the runtime secrets (PayPal, SMTP, `AUTH_SECRET`, DB credentials) so PayPal, email, accounting, orders, and settings all keep working after a move.
+
+> The archive contains secrets. Keep it private and never commit it.
+
+### Restore on a new machine
+
+```bash
+# from the project root on the new server
+chmod +x scripts/restore.sh
+./scripts/restore.sh backup-2026-06-26T20-40-00.tar.gz
+```
+
+The script writes `.env` from the snapshot (if none exists), restores uploaded files, starts Postgres, loads the database dump, and brings the stack up with `docker compose -f docker-compose.prod.yml up -d --build`. Use `COMPOSE_FILE=docker-compose.public.yml ./scripts/restore.sh ...` for the public/Cloudflare setup.
+
+## Connecting to the database (external client)
+
+The Postgres container publishes port `5432`, bound to `127.0.0.1` by default, so it is **not** reachable from the public internet. Connection details:
+
+| Field | Value |
+|-------|-------|
+| Host | `127.0.0.1` (via SSH tunnel) |
+| Port | `5432` |
+| Database | `radio_store` (or `POSTGRES_DB`) |
+| User | `postgres` (or `POSTGRES_USER`) |
+| Password | `POSTGRES_PASSWORD` from `.env` |
+
+### Recommended: SSH tunnel (secure)
+
+From your laptop, forward the remote DB port over SSH, then point pgAdmin/DBeaver at `localhost:5432`:
+
+```bash
+ssh -L 5432:127.0.0.1:5432 user@your-server
+# now connect a local DB client to localhost:5432
+```
+
+### Optional: expose publicly (use with caution)
+
+Only if you understand the risk. Set a strong password and open the port in the firewall:
+
+```env
+DB_PUBLISH_ADDR=0.0.0.0
+POSTGRES_PASSWORD=<strong-password>
+```
+
+Then `docker compose -f docker-compose.prod.yml up -d`. Prefer the SSH tunnel instead.
 
 ## Useful Commands
 

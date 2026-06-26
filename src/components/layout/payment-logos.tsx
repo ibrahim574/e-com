@@ -1,60 +1,64 @@
+import type { ReactNode } from "react";
+
+function Chip({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      className="inline-flex h-9 min-w-[58px] items-center justify-center rounded-md border border-slate-200 bg-white px-3 shadow-sm"
+    >
+      {children}
+    </span>
+  );
+}
+
 function VisaLogo() {
   return (
-    <svg
-      role="img"
-      aria-label="Visa"
-      className="h-8 w-auto shrink-0"
-      viewBox="0 0 48 16"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fill="#1A1F71"
-        d="M19.5 1.5h-3.2l-2 13h3.2l2-13zm8.7 8.4c0-3.2-4.4-3.4-4.4-4.8 0-.4.4-1 1.4-1.1.5 0 1.8.1 3.3.7l.6-2.7c-.8-.3-1.9-.6-3.3-.6-3.5 0-5.9 1.8-5.9 4.5 0 2 1.8 3.1 3.1 3.8 1.4.7 1.9 1.2 1.9 1.8 0 1-1.1 1.4-2.2 1.4-1.8 0-2.9-.5-3.7-.9l-.6 2.8c.8.4 2.2.7 3.7.7 3.7 0 6.1-1.8 6.1-4.6zm9.8 4.6h2.9l-2.5-13h-2.7c-.6 0-1.1.4-1.3.9l-4.6 12.1h3.3l.6-1.7h4.1l.4 1.7zm-3.6-4.2 1.7-4.7.9 4.7h-2.6zM9.2 1.5 6.1 11.1 5.7 8.8 4.2 1.5H1L0 14.5h3.1l.5-3.4.5 3.4h3.3l3.1-13H9.2z"
-      />
-    </svg>
+    <Chip label="Visa">
+      <span
+        className="text-[18px] font-extrabold italic leading-none tracking-tight"
+        style={{ color: "#1434CB", fontFamily: "Arial, Helvetica, sans-serif" }}
+      >
+        VISA
+      </span>
+    </Chip>
   );
 }
 
 function MastercardLogo() {
   return (
-    <svg
-      role="img"
-      aria-label="Mastercard"
-      className="h-8 w-auto shrink-0"
-      viewBox="0 0 48 30"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="18" cy="15" r="11" fill="#EB001B" />
-      <circle cx="30" cy="15" r="11" fill="#F79E1B" />
-      <path fill="#FF5F00" d="M24 7.2a11 11 0 0 1 0 15.6 11 11 0 0 1 0-15.6z" />
-    </svg>
+    <Chip label="Mastercard">
+      <svg
+        className="h-6 w-auto"
+        viewBox="0 0 48 30"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle cx="18" cy="15" r="11" fill="#EB001B" />
+        <circle cx="30" cy="15" r="11" fill="#F79E1B" />
+        <path fill="#FF5F00" d="M24 7.2a11 11 0 0 1 0 15.6 11 11 0 0 1 0-15.6z" />
+      </svg>
+    </Chip>
   );
 }
 
 function PayPalLogo() {
   return (
-    <svg
-      role="img"
-      aria-label="PayPal"
-      className="h-8 w-auto shrink-0"
-      viewBox="0 0 101 32"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fill="#003087"
-        d="M35.834 8.668H26.32c-.632 0-1.172.467-1.269 1.092L20.88 29.453c-.07.434.27.812.71.812h5.026c.632 0 1.173-.467 1.27-1.092l.656-4.17.04-.254c.097-.625.638-1.092 1.27-1.092h2.66c5.439 0 8.58-2.63 9.394-7.868.368-2.21.013-3.948-.966-5.162-1.089-1.297-3.026-1.778-5.389-1.778zm.978 7.667c-.448 2.871-2.621 2.871-4.794 2.871h-1.21l.848-5.39h1.21c1.434 0 2.776 0 3.487.814.428.428.624 1.046.533 1.705z"
-      />
-      <path
-        fill="#009CDE"
-        d="M63.074 16.085c-.448-2.21-2.557-2.21-4.526-2.21h-1.21l-.422 2.675h-1.132a.564.564 0 0 0-.557.478l-.403 2.559-.098.705a.564.564 0 0 0 .557.659h2.344l1.109-7.043c.097-.625.638-1.092 1.27-1.092h.626c4.062 0 7.11-1.728 7.872-6.556.39-1.938 0-3.411-1.053-4.404-.936-1.11-2.428-1.703-4.403-1.703h-5.439c-.632 0-1.172.467-1.269 1.092l-2.373 14.922c-.07.434.27.812.71.812h4.679l1.109-7.043z"
-      />
-    </svg>
+    <Chip label="PayPal">
+      <span
+        className="text-[16px] font-extrabold italic leading-none tracking-tight"
+        style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+      >
+        <span style={{ color: "#003087" }}>Pay</span>
+        <span style={{ color: "#0070E0" }}>Pal</span>
+      </span>
+    </Chip>
   );
 }
 
 export function PaymentLogos() {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-10">
+    <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
       <VisaLogo />
       <MastercardLogo />
       <PayPalLogo />

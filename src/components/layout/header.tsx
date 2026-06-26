@@ -16,6 +16,7 @@ import { SITE_PHONE } from "@/lib/constants";
 import { setCurrencyAction } from "@/app/actions/currency";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SiteLogo } from "@/components/layout/site-logo";
+import { Avatar } from "@/components/ui/avatar";
 
 type NavItem = { name: string; slug: string };
 
@@ -28,6 +29,8 @@ export function Header({
   announcementText,
   announcementEnabled = true,
   logoUrl,
+  avatarUrl,
+  userName,
 }: {
   cartCount?: number;
   currency: "CAD" | "USD";
@@ -37,6 +40,8 @@ export function Header({
   announcementText?: string;
   announcementEnabled?: boolean;
   logoUrl?: string | null;
+  avatarUrl?: string | null;
+  userName?: string | null;
 }) {
   const router = useRouter();
   const [openMenu, setOpenMenu] = useState<"categories" | "industries" | null>(
@@ -173,7 +178,11 @@ export function Header({
               aria-label="Account"
               className="grid h-10 w-10 place-items-center rounded-full text-slate-700 transition hover:bg-slate-100"
             >
-              <User className="h-5 w-5" />
+              {avatarUrl ? (
+                <Avatar src={avatarUrl} name={userName} size={28} />
+              ) : (
+                <User className="h-5 w-5" />
+              )}
             </Link>
             <Link
               href="/cart"

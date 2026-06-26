@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/accounting";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -34,9 +35,10 @@ export default async function ExpensesPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-slate-900">Expenses</h1>
 
-      <form
+      <ActionForm
         action={createExpenseAction}
-        className="grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2"
+        successMessage="Expense added."
+        className="grid gap-4 rounded-xl border bg-white p-6 sm:grid-cols-2 dark:border-slate-700 dark:bg-slate-900"
       >
         <h2 className="sm:col-span-2 text-lg font-bold">Add Expense</h2>
         <div>
@@ -74,7 +76,7 @@ export default async function ExpensesPage() {
         <div className="sm:col-span-2">
           <Button type="submit">Add Expense</Button>
         </div>
-      </form>
+      </ActionForm>
 
       <div className="rounded-xl border bg-white p-4">
         <h3 className="font-bold">Categories</h3>

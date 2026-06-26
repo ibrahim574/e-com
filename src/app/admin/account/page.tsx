@@ -1,5 +1,7 @@
 import { requireAdmin } from "@/lib/admin-guard";
+import { prisma } from "@/lib/prisma";
 import { ChangePasswordForm } from "@/components/admin/change-password-form";
+import { AvatarUploader } from "@/components/account/avatar-uploader";
 import { signOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -7,6 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminAccountPage() {
   const session = await requireAdmin();
+  const profile = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, email: true, avatarUrl: true },
+  });
 
   return (
     <div className="space-y-8">
@@ -19,6 +25,12 @@ export default async function AdminAccountPage() {
           Role: {session.user.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"}
         </p>
       </div>
+
+      <AvatarUploader
+        avatarUrl={profile?.avatarUrl ?? null}
+        name={profile?.name ?? null}
+        email={profile?.email ?? session.user.email ?? ""}
+      />
 
       <ChangePasswordForm />
 

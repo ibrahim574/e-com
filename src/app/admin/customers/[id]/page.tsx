@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/admin-guard";
+import { requireAdmin, isSuperAdminRole } from "@/lib/admin-guard";
 import { prisma } from "@/lib/prisma";
 import { formatPrice } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { CustomerEditForms } from "@/components/admin/customer-edit-forms";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,8 @@ export default async function AdminCustomerDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  const session = await requireAdmin();
+  const isSuperAdmin = isSuperAdminRole(session.user.role);
   const { id } = await params;
 
   const customer = await prisma.user.findUnique({
@@ -101,6 +103,22 @@ export default async function AdminCustomerDetailPage({
         </div>
       </div>
 
+      <CustomerEditForms
+        customer={{
+          id: customer.id,
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          addressLine1: customer.addressLine1,
+          addressLine2: customer.addressLine2,
+          addressCity: customer.addressCity,
+          addressState: customer.addressState,
+          addressPostal: customer.addressPostal,
+          addressCountry: customer.addressCountry,
+        }}
+        isSuperAdmin={isSuperAdmin}
+      />
+
       <div className="rounded-xl border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-6 py-4">
           <h2 className="text-base font-bold text-slate-900">
@@ -112,6 +130,7 @@ export default async function AdminCustomerDetailPage({
             No orders yet.
           </p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-left">
               <tr>
@@ -140,6 +159,7 @@ export default async function AdminCustomerDetailPage({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

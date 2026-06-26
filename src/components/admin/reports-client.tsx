@@ -15,8 +15,14 @@ const REPORT_TYPES = [
   { id: "payments", label: "Payment Records" },
 ] as const;
 
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const yearStartStr = () =>
+  new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10);
+
 export function ReportsClient() {
   const [type, setType] = useState<string>("sales");
+  const [from, setFrom] = useState<string>(yearStartStr());
+  const [to, setTo] = useState<string>(todayStr());
   const [preview, setPreview] = useState<{
     headers: string[];
     rows: Record<string, string | number>[];
@@ -27,14 +33,20 @@ export function ReportsClient() {
   async function handlePreview(formData: FormData) {
     setLoading(true);
     formData.set("type", type);
+    formData.set("from", from);
+    formData.set("to", to);
     const result = await previewReportAction(formData);
     setPreview(result);
     setLoading(false);
   }
 
-  async function handleDownload(format: "pdf" | "xlsx" | "csv", formData: FormData) {
+  async function handleDownload(format: "pdf" | "xlsx" | "csv") {
+    const formData = new FormData();
     formData.set("type", type);
     formData.set("format", format);
+    // Use the currently selected range so the export matches the preview.
+    formData.set("from", from);
+    formData.set("to", to);
     const result = await downloadReportAction(formData);
     if (!result) return;
     const blob = new Blob([new Uint8Array(result.buffer)], { type: result.contentType });
@@ -73,12 +85,19 @@ export function ReportsClient() {
             id="from"
             name="from"
             type="date"
-            defaultValue={new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10)}
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
           />
         </div>
         <div>
           <Label htmlFor="to">To</Label>
-          <Input id="to" name="to" type="date" defaultValue={new Date().toISOString().slice(0, 10)} />
+          <Input
+            id="to"
+            name="to"
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+          />
         </div>
         <Button type="submit" disabled={loading}>
           {loading ? "Loading…" : "Generate Preview"}
@@ -91,13 +110,15 @@ export function ReportsClient() {
             <h2 className="text-lg font-bold">{preview.title}</h2>
             <div className="flex gap-2">
               {(["pdf", "xlsx", "csv"] as const).map((fmt) => (
-                <form key={fmt} action={(fd) => handleDownload(fmt, fd)}>
-                  <input type="hidden" name="from" value={new Date(new Date().getFullYear(), 0, 1).toISOString().slice(0, 10)} />
-                  <input type="hidden" name="to" value={new Date().toISOString().slice(0, 10)} />
-                  <Button type="submit" variant="outline" size="sm">
-                    {fmt.toUpperCase()}
-                  </Button>
-                </form>
+                <Button
+                  key={fmt}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(fmt)}
+                >
+                  {fmt.toUpperCase()}
+                </Button>
               ))}
             </div>
           </div>

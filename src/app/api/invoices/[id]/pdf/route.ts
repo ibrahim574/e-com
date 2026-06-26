@@ -20,7 +20,13 @@ export async function GET(
   }
 
   const isOwner = invoice.order.userId === session?.user?.id;
-  const isAdmin = isAdminRole(session?.user?.role);
+  const dbUser = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      })
+    : null;
+  const isAdmin = isAdminRole(dbUser?.role);
 
   if (!isOwner && !isAdmin) {
     return new Response("Forbidden", { status: 403 });

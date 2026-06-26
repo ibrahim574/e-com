@@ -86,6 +86,51 @@
   @apply bg-slate-900 text-slate-300;
 }
 
+/* Extra surface coverage so dark mode is consistent across admin + storefront */
+.dark .bg-slate-100 {
+  @apply bg-slate-800 text-slate-100;
+}
+
+.dark .bg-slate-200 {
+  @apply bg-slate-700 text-slate-100;
+}
+
+.dark .text-slate-800 {
+  @apply text-slate-200;
+}
+
+.dark .border-slate-300 {
+  @apply border-slate-600;
+}
+
+.dark .border-slate-100 {
+  @apply border-slate-800;
+}
+
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover {
+  background-color: #1e293b;
+}
+
+.dark .hover\:bg-slate-200:hover {
+  background-color: #334155;
+}
+
+.dark .hover\:bg-white:hover {
+  background-color: #0f172a;
+}
+
+/* Divider borders inside dark tables/lists */
+.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b;
+}
+
+/* Keep intentionally white surfaces white (e.g. payment-method chips) */
+.dark .keep-light {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -174,6 +219,61 @@ body {
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease both;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Scroll-reveal (toggled by the <Reveal> component via IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.reveal-left {
+  transform: translateX(-26px);
+}
+
+.reveal.reveal-right {
+  transform: translateX(26px);
+}
+
+.reveal.reveal-scale {
+  transform: scale(0.96);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -224,4 +324,21 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Respect users who prefer reduced motion: disable animations/transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

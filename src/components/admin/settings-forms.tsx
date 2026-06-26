@@ -61,9 +61,18 @@ type ShippingZoneRow = {
   isEnabled: boolean;
 };
 
+type PayPalStatus = {
+  clientIdSet: boolean;
+  secretSet: boolean;
+  publicClientIdSet: boolean;
+  mode: "live" | "sandbox";
+  publicClientIdLast4: string | null;
+};
+
 const TABS = [
   { id: "branding", label: "Branding" },
   { id: "currency", label: "Currency" },
+  { id: "payments", label: "Payments" },
   { id: "tax", label: "Tax Rules" },
   { id: "shipping", label: "Shipping" },
   { id: "invoice", label: "Invoice" },
@@ -84,6 +93,7 @@ export function SettingsForms({
   shippingZones,
   invoiceSettings,
   isSuperAdmin,
+  paypalStatus,
 }: {
   settings: SiteSettings;
   signalTypes: Attr[];
@@ -93,6 +103,7 @@ export function SettingsForms({
   shippingZones: ShippingZoneRow[];
   invoiceSettings: InvoiceSettingsData;
   isSuperAdmin: boolean;
+  paypalStatus: PayPalStatus;
 }) {
   const [tab, setTab] = useState<TabId>("currency");
   const [message, setMessage] = useState<string | null>(null);
@@ -117,8 +128,9 @@ export function SettingsForms({
   async function handleInvoiceSettings(formData: FormData) {
     setMessage(null);
     setError(null);
-    await updateInvoiceSettingsAction(formData);
-    setMessage("Invoice settings saved.");
+    const result = await updateInvoiceSettingsAction(formData);
+    if (result?.error) setError(result.error);
+    else setMessage("Invoice settings saved.");
   }
 
   return (
@@ -184,8 +196,43 @@ export function SettingsForms({
               </label>
             )}
           </div>
+
+          <div className="border-t border-slate-200 pt-6 dark:border-slate-700">
+            <Label>Browser tab icon (favicon)</Label>
+            <div className="mt-2 flex items-center gap-4">
+              {settings.siteFaviconUrl ? (
+                <Image
+                  src={settings.siteFaviconUrl}
+                  alt="Current favicon"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 rounded-lg border border-slate-200 object-contain dark:border-slate-700"
+                  unoptimized
+                />
+              ) : (
+                <span className="grid h-10 w-10 place-items-center rounded-lg border border-dashed border-slate-300 text-xs text-slate-400 dark:border-slate-600">
+                  none
+                </span>
+              )}
+              <Input
+                name="siteFavicon"
+                type="file"
+                accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/svg+xml,.ico"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              ICO, PNG, or SVG up to 512 KB. Falls back to the site logo when unset.
+            </p>
+            {settings.siteFaviconUrl && (
+              <label className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="resetFavicon" />
+                Remove custom favicon
+              </label>
+            )}
+          </div>
+
           <div className="flex justify-end">
-            <Button type="submit">Save logo</Button>
+            <Button type="submit">Save branding</Button>
           </div>
         </form>
       )}
@@ -212,6 +259,61 @@ export function SettingsForms({
             <Button type="submit">Save</Button>
           </div>
         </form>
+      )}
+
+      {tab === "payments" && (
+        <div className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            PayPal
+          </h2>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            PayPal credentials are configured in the server <code>.env</code> file
+            (never editable here for security). After updating them, restart the app
+            container. This panel only shows whether each value is present.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            <StatusRow label="PAYPAL_CLIENT_ID (server)" ok={paypalStatus.clientIdSet} />
+            <StatusRow label="PAYPAL_CLIENT_SECRET (server)" ok={paypalStatus.secretSet} />
+            <StatusRow
+              label="NEXT_PUBLIC_PAYPAL_CLIENT_ID (browser)"
+              ok={paypalStatus.publicClientIdSet}
+              hint={
+                paypalStatus.publicClientIdLast4
+                  ? `ends in …${paypalStatus.publicClientIdLast4}`
+                  : undefined
+              }
+            />
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                Mode
+              </span>
+              <span
+                className={`rounded-full px-3 py-0.5 text-xs font-bold uppercase ${
+                  paypalStatus.mode === "live"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                }`}
+              >
+                {paypalStatus.mode}
+              </span>
+            </div>
+          </div>
+
+          {paypalStatus.clientIdSet &&
+          paypalStatus.secretSet &&
+          paypalStatus.publicClientIdSet ? (
+            <p className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+              PayPal is fully configured. Checkout should display the PayPal button.
+            </p>
+          ) : (
+            <p className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+              PayPal is not fully configured. Set the missing keys in <code>.env</code>{" "}
+              (all three must belong to the same PayPal app and the same mode), then
+              restart the app container.
+            </p>
+          )}
+        </div>
       )}
 
       {tab === "tax" && (
@@ -753,6 +855,38 @@ export function SettingsForms({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function StatusRow({
+  label,
+  ok,
+  hint,
+}: {
+  label: string;
+  ok: boolean;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        {label}
+        {hint ? (
+          <span className="ml-2 font-normal text-slate-500 dark:text-slate-400">
+            {hint}
+          </span>
+        ) : null}
+      </span>
+      <span
+        className={`rounded-full px-3 py-0.5 text-xs font-bold ${
+          ok
+            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+            : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+        }`}
+      >
+        {ok ? "Set" : "Missing"}
+      </span>
     </div>
   );
 }
