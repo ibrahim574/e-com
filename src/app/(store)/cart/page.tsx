@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ProductImage } from "@/components/products/product-image";
 import { getCart, getVariantLabel } from "@/lib/cart";
+import { auth } from "@/lib/auth";
 import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
 import { formatPrice } from "@/lib/utils";
@@ -10,9 +11,15 @@ import { removeCartItemAction } from "@/app/actions/cart";
 import { getShippingCentsForCountry } from "@/lib/shipping";
 import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
 import { formatItemFrequency } from "@/lib/order-item-frequency";
+import { resolveCartDiscount } from "@/lib/coupons";
+import { CartCoupon } from "@/components/cart/cart-coupon";
 
 export default async function CartPage() {
-  const [cart, currency] = await Promise.all([getCart(), getCurrency()]);
+  const [cart, currency, session] = await Promise.all([
+    getCart(),
+    getCurrency(),
+    auth(),
+  ]);
   const items = cart?.items ?? [];
 
   let subtotalCents = 0;
@@ -26,15 +33,31 @@ export default async function CartPage() {
 
   subtotalCents = lines.reduce((sum, line) => sum + line.lineTotal, 0);
 
+  const discount = await resolveCartDiscount(cart?.couponCode ?? null, {
+    subtotalCents,
+    shippingCents: 0,
+    userId: session?.user?.id ?? null,
+    email: session?.user?.email ?? null,
+    items: lines.map(({ item, pricing }) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPriceCents: pricing.currentCents,
+    })),
+  });
+  const discountCents = discount?.discountCents ?? 0;
+  const freeShipping = discount?.freeShipping ?? false;
+
   const defaultCountry = currency === "CAD" ? "CA" : "US";
-  const shippingCents = await getShippingCentsForCountry(
+  const rawShippingCents = await getShippingCentsForCountry(
     subtotalCents,
     defaultCountry,
     currency,
   );
+  const shippingCents = freeShipping ? 0 : rawShippingCents;
+  const discountedSubtotal = Math.max(0, subtotalCents - discountCents);
   const taxRules = await resolveTaxRules(defaultCountry, "ON");
-  const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);
-  const totalCents = subtotalCents + shippingCents + tax.taxCents;
+  const tax = calcOrderTax(discountedSubtotal, shippingCents, taxRules);
+  const totalCents = discountedSubtotal + shippingCents + tax.taxCents;
 
   return (
     <div className="container-page py-10">
@@ -80,6 +103,12 @@ export default async function CartPage() {
                   {frequency && (
                     <p className="text-sm text-slate-500">{frequency}</p>
                   )}
+                  {(item.variant?.stock ?? item.product.stock) <= 0 &&
+                    (item.product.allowPreorder || item.product.allowBackorder) && (
+                      <span className="mt-0.5 inline-flex w-fit rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                        {item.product.allowPreorder ? "Pre-order" : "Backorder"}
+                      </span>
+                    )}
                   <p className="mt-1 font-medium">
                     {formatPrice(pricing.currentCents, currency)}
                   </p>
@@ -112,6 +141,12 @@ export default async function CartPage() {
                 <span>Subtotal</span>
                 <span>{formatPrice(subtotalCents, currency)}</span>
               </div>
+              {discountCents > 0 && (
+                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                  <span>Discount{discount ? ` (${discount.label})` : ""}</span>
+                  <span>-{formatPrice(discountCents, currency)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Shipping</span>
                 <span>
@@ -134,6 +169,10 @@ export default async function CartPage() {
             <p className="mt-3 text-xs text-slate-500">
               Tax calculated at checkout based on your shipping address.
             </p>
+            <CartCoupon
+              appliedCode={cart?.couponCode ?? null}
+              isValid={Boolean(discount)}
+            />
             <Button className="mt-6 w-full" size="lg" asChild>
               <Link href="/checkout">Proceed to Checkout</Link>
             </Button>

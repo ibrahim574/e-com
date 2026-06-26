@@ -16,12 +16,19 @@ function isOrderStatus(value: string | undefined): value is OrderStatus {
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; from?: string; to?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    q?: string;
+    from?: string;
+    to?: string;
+    flagged?: string;
+  }>;
 }) {
   await requireAdmin();
 
-  const { status, q = "", from = "", to = "" } = await searchParams;
+  const { status, q = "", from = "", to = "", flagged } = await searchParams;
   const activeStatus = isOrderStatus(status) ? status : null;
+  const flaggedOnly = flagged === "1";
   const query = q.trim();
 
   const activeOrdersWhere: Prisma.OrderWhereInput = { deletedAt: null };
@@ -29,6 +36,7 @@ export default async function AdminOrdersPage({
   const where: Prisma.OrderWhereInput = {
     ...activeOrdersWhere,
     ...(activeStatus ? { status: activeStatus } : {}),
+    ...(flaggedOnly ? { flagged: true } : {}),
     ...(query
       ? {
           OR: [
@@ -49,7 +57,7 @@ export default async function AdminOrdersPage({
       : {}),
   };
 
-  const [orders, statusGroups, totalCount] = await Promise.all([
+  const [orders, statusGroups, totalCount, flaggedCount] = await Promise.all([
     prisma.order.findMany({
       where,
       include: { items: true, user: true },
@@ -61,6 +69,7 @@ export default async function AdminOrdersPage({
       _count: { _all: true },
     }),
     prisma.order.count({ where: activeOrdersWhere }),
+    prisma.order.count({ where: { ...activeOrdersWhere, flagged: true } }),
   ]);
 
   const countFor = (s: OrderStatus) =>
@@ -93,10 +102,27 @@ export default async function AdminOrdersPage({
 
       {/* Filter tabs */}
       <div className="flex flex-wrap gap-2">
+        <Link
+          href="/admin/orders?flagged=1"
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            flaggedOnly
+              ? "bg-red-600 text-white"
+              : "border border-red-200 bg-white text-red-600 hover:bg-red-50"
+          }`}
+        >
+          Flagged
+          <span
+            className={`rounded-full px-1.5 text-xs font-bold ${
+              flaggedOnly ? "bg-white/20 text-white" : "bg-red-100 text-red-600"
+            }`}
+          >
+            {flaggedCount}
+          </span>
+        </Link>
         {filters.map((f) => {
           const href = f.key === "ALL" ? "/admin/orders" : `/admin/orders?status=${f.key}`;
           const isActive =
-            f.key === "ALL" ? !activeStatus : activeStatus === f.key;
+            f.key === "ALL" ? !activeStatus && !flaggedOnly : activeStatus === f.key;
           return (
             <Link
               key={f.key}
@@ -179,6 +205,18 @@ export default async function AdminOrdersPage({
                       {isOverdue && (
                         <span className="rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-800">
                           Overdue
+                        </span>
+                      )}
+                      {order.flagged && (
+                        <span
+                          title={
+                            Array.isArray(order.fraudReasons)
+                              ? (order.fraudReasons as string[]).join("; ")
+                              : "Flagged for review"
+                          }
+                          className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700"
+                        >
+                          ⚑ Flagged
                         </span>
                       )}
                     </div>

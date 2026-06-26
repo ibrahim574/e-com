@@ -31,6 +31,9 @@ type ProductFormProps = {
     allowCustomFrequency?: boolean;
     customTxRequired?: boolean;
     customRxRequired?: boolean;
+    allowPreorder?: boolean;
+    preorderReleaseDate?: Date | string | null;
+    allowBackorder?: boolean;
     categories: Array<{ categoryId: string }>;
     industries: Array<{ industryId: string }>;
     signalTypes?: Array<{ signalTypeId: string }>;
@@ -276,6 +279,49 @@ export async function ProductForm({ product }: ProductFormProps) {
           />
           Has Variants
         </label>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 p-4">
+        <h2 className="text-base font-bold text-slate-900">
+          Availability (pre-order / backorder)
+        </h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Allow customers to buy even when stock is zero. Leave both off to show
+          a &quot;Request this product&quot; form on out-of-stock items.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="allowPreorder"
+              defaultChecked={product?.allowPreorder}
+            />
+            Allow pre-orders
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="allowBackorder"
+              defaultChecked={product?.allowBackorder}
+            />
+            Allow backorders
+          </label>
+          <div>
+            <Label htmlFor="preorderReleaseDate">Pre-order release date</Label>
+            <Input
+              id="preorderReleaseDate"
+              name="preorderReleaseDate"
+              type="date"
+              defaultValue={
+                product?.preorderReleaseDate
+                  ? new Date(product.preorderReleaseDate)
+                      .toISOString()
+                      .slice(0, 10)
+                  : ""
+              }
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

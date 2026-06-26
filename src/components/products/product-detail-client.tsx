@@ -13,6 +13,7 @@ import {
 import { addToCartAction } from "@/app/actions/cart";
 import { QuantitySelector } from "@/components/products/quantity-selector";
 import { PreOrderModal } from "@/components/products/pre-order-modal";
+import { PurchaseRequestForm } from "@/components/products/purchase-request-form";
 import Link from "next/link";
 import { Input, Label } from "@/components/ui/input";
 import { formatPrice } from "@/lib/utils";
@@ -69,6 +70,9 @@ type ProductDetailClientProps = {
     allowCustomFrequency?: boolean;
     customTxRequired?: boolean;
     customRxRequired?: boolean;
+    allowPreorder?: boolean;
+    preorderReleaseDate?: string | Date | null;
+    allowBackorder?: boolean;
     youtubeUrl?: string | null;
   };
   options: Option[];
@@ -190,20 +194,26 @@ export function ProductDetailClient({
 
   const allOptionsChosen =
     !product.hasVariants || options.every((o) => selectedValues[o.id]);
-  const inStock = product.hasVariants
+  const physicallyInStock = product.hasVariants
     ? selectedVariant
       ? selectedVariant.stock > 0
       : false
     : product.stock > 0;
+  const openOrder = Boolean(product.allowPreorder || product.allowBackorder);
+  // Pre-order/backorder products can be purchased past their on-hand stock.
+  const inStock = physicallyInStock || openOrder;
+  const isOpenOrderPurchase = openOrder && !physicallyInStock;
   const canAdd =
     allOptionsChosen &&
     inStock &&
     (!product.hasVariants || selectedVariant) &&
     (!frequencyChoices.length || selectedFrequency || isCustomProgramming) &&
     (!isCustomFrequency || hasCustomFrequencyFields);
-  const maxQuantity = product.hasVariants
-    ? (selectedVariant?.stock ?? 1)
-    : product.stock;
+  const maxQuantity = openOrder
+    ? 99
+    : product.hasVariants
+      ? (selectedVariant?.stock ?? 1)
+      : product.stock;
 
   useEffect(() => {
     setQuantity((q) => Math.min(Math.max(1, q), maxQuantity));
@@ -467,13 +477,39 @@ export function ProductDetailClient({
                 "Select Frequency"
               ) : isCustomFrequency && !hasCustomFrequencyFields ? (
                 "Enter TX and RX Frequency"
+              ) : isOpenOrderPurchase && product.allowPreorder ? (
+                "Pre-Order Now"
+              ) : isOpenOrderPurchase ? (
+                "Add to Cart (Backorder)"
               ) : (
                 "Add to Cart"
               )}
             </button>
           </div>
 
-          {!inStock && allOptionsChosen && (
+          {isOpenOrderPurchase && (
+            <p className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
+              {product.allowPreorder ? (
+                <>
+                  This item is available for <strong>pre-order</strong>
+                  {product.preorderReleaseDate
+                    ? ` — expected to ship around ${new Date(
+                        product.preorderReleaseDate,
+                      ).toLocaleDateString()}`
+                    : ""}
+                  .
+                </>
+              ) : (
+                <>
+                  This item is currently out of stock but available on{" "}
+                  <strong>backorder</strong>. We&apos;ll ship it as soon as
+                  inventory arrives.
+                </>
+              )}
+            </p>
+          )}
+
+          {!openOrder && !inStock && allOptionsChosen && (
             <div className="mt-3 flex flex-col gap-2 sm:flex-row">
               <button
                 type="button"
@@ -489,6 +525,13 @@ export function ProductDetailClient({
                 Get a Quote
               </Link>
             </div>
+          )}
+
+          {!openOrder && !physicallyInStock && allOptionsChosen && (
+            <PurchaseRequestForm
+              productId={product.id}
+              productName={product.name}
+            />
           )}
 
           <PreOrderModal

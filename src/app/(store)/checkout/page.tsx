@@ -7,21 +7,33 @@ import { getCurrency } from "@/lib/currency-server";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
 import { getShippingCentsForCountry } from "@/lib/shipping";
 import { calcOrderTax, resolveTaxRules } from "@/lib/tax-rules";
+import { getSiteSettings } from "@/lib/site-settings";
+import { resolveCartDiscount } from "@/lib/coupons";
 
 export default async function CheckoutPage() {
   const session = await auth();
-  const [cart, currency] = await Promise.all([getCart(), getCurrency()]);
+  const [cart, currency, settings] = await Promise.all([
+    getCart(),
+    getCurrency(),
+    getSiteSettings(),
+  ]);
 
   if (!cart?.items.length) {
     redirect("/cart");
   }
 
   let subtotalCents = 0;
+  const couponItems: { productId: string; quantity: number; unitPriceCents: number }[] = [];
   for (const item of cart.items) {
     const pricing = item.variant
       ? getVariantPrice(item.variant, item.product, currency)
       : getProductPrice(item.product, currency);
     subtotalCents += pricing.currentCents * item.quantity;
+    couponItems.push({
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPriceCents: pricing.currentCents,
+    });
   }
 
   const profile = session?.user?.id
@@ -44,14 +56,26 @@ export default async function CheckoutPage() {
     profile?.addressCountry ?? (currency === "CAD" ? "CA" : "US");
   const defaultState = profile?.addressState ?? "ON";
 
-  const shippingCents = await getShippingCentsForCountry(
+  const discount = await resolveCartDiscount(cart.couponCode ?? null, {
+    subtotalCents,
+    shippingCents: 0,
+    userId: session?.user?.id ?? null,
+    email: session?.user?.email ?? null,
+    items: couponItems,
+  });
+  const discountCents = discount?.discountCents ?? 0;
+  const freeShipping = discount?.freeShipping ?? false;
+
+  const rawShippingCents = await getShippingCentsForCountry(
     subtotalCents,
     defaultCountry,
     currency,
   );
+  const shippingCents = freeShipping ? 0 : rawShippingCents;
+  const discountedSubtotal = Math.max(0, subtotalCents - discountCents);
   const taxRules = await resolveTaxRules(defaultCountry, defaultState);
-  const tax = calcOrderTax(subtotalCents, shippingCents, taxRules);
-  const totalCents = subtotalCents + shippingCents + tax.taxCents;
+  const tax = calcOrderTax(discountedSubtotal, shippingCents, taxRules);
+  const totalCents = discountedSubtotal + shippingCents + tax.taxCents;
 
   return (
     <div className="container-page py-10">
@@ -60,6 +84,9 @@ export default async function CheckoutPage() {
         <CheckoutClient
           currency={currency}
           subtotalCents={subtotalCents}
+          discountCents={discountCents}
+          freeShipping={freeShipping}
+          couponLabel={discount?.label ?? null}
           shippingCents={shippingCents}
           taxCents={tax.taxCents}
           taxLabel={tax.taxLabel}
@@ -76,6 +103,10 @@ export default async function CheckoutPage() {
             country: defaultCountry,
           }}
           paypalClientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? ""}
+          offlineMethods={{
+            cash: settings.cashOnPickupEnabled,
+            interac: settings.interacEnabled,
+          }}
         />
       </div>
     </div>

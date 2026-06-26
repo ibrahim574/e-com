@@ -2,6 +2,35 @@ import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/products/product-card";
 import { prisma } from "@/lib/prisma";
 import { getCurrency } from "@/lib/currency-server";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const industry = await prisma.industry.findUnique({
+    where: { slug },
+    select: { name: true, description: true },
+  });
+  if (!industry) return { title: "Industry Not Found" };
+  const title = `Radios for ${industry.name}`;
+  const description =
+    industry.description ??
+    `Two-way radio and communication solutions for ${industry.name}.`;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/industries/${slug}` },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: `/industries/${slug}`,
+    },
+  };
+}
 
 export default async function IndustryPage({
   params,

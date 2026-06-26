@@ -1,7 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { cacheGet, cacheSet } from "@/lib/cache";
+
+export const metadata: Metadata = {
+  title: "Featured",
+  description: "Featured products and highlights from our two-way radio catalog.",
+  alternates: { canonical: "/featured" },
+  openGraph: { type: "website", title: "Featured", url: "/featured" },
+};
 
 async function getFeaturedItems() {
   const cached = cacheGet<Awaited<ReturnType<typeof fetchItems>>>("featured-items");

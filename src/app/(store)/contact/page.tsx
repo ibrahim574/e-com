@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   SITE_EMAIL,
   SITE_PHONE,
@@ -7,6 +8,13 @@ import {
   PAYMENT_METHODS,
   SITE_NAME,
 } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description: `Contact ${SITE_NAME} for sales, support, and quotes on professional two-way radios.`,
+  alternates: { canonical: "/contact" },
+  openGraph: { type: "website", title: "Contact Us", url: "/contact" },
+};
 
 export default function ContactPage() {
   return (

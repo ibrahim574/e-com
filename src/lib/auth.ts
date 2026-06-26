@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { writeSystemLog } from "./system-log";
 
 type AppUserRole = "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
 
@@ -49,6 +50,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) {
+          await writeSystemLog({
+            category: "LOGIN",
+            level: "warn",
+            message: `Failed login — unknown email ${email}`,
+            metadata: { email },
+          });
           return null;
         }
 
@@ -58,8 +65,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
         if (!valid) {
+          await writeSystemLog({
+            category: "LOGIN",
+            level: "warn",
+            message: `Failed login — wrong password for ${email}`,
+            metadata: { email, userId: user.id },
+            userId: user.id,
+          });
           return null;
         }
+
+        await writeSystemLog({
+          category: "LOGIN",
+          level: "info",
+          message: `Successful login for ${email}`,
+          metadata: { email, role: user.role },
+          userId: user.id,
+        });
 
         return {
           id: user.id,

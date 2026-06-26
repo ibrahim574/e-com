@@ -22,6 +22,12 @@ import {
   MessageSquare,
   Images,
   DatabaseBackup,
+  Signpost,
+  Ticket,
+  GitCompare,
+  ClipboardCheck,
+  Activity,
+  ScrollText,
   Menu,
   X,
 } from "lucide-react";
@@ -34,7 +40,10 @@ const baseLinks = [
   { href: "/admin/categories", label: "Categories", icon: Layers },
   { href: "/admin/industries", label: "Industries", icon: Building2 },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { href: "/admin/compare", label: "Compare", icon: GitCompare },
   { href: "/admin/leads", label: "Leads", icon: MessageSquare },
+  { href: "/admin/purchase-requests", label: "Requests", icon: ClipboardCheck },
   { href: "/admin/accounting/ledger", label: "Ledger", icon: BookOpen },
   { href: "/admin/accounting/expenses", label: "Expenses", icon: Receipt },
   { href: "/admin/accounting/refunds", label: "Refunds", icon: RotateCcw },
@@ -57,6 +66,9 @@ function useAdminLinks(isSuperAdmin: boolean): AdminLink[] {
   return isSuperAdmin
     ? [
         ...baseLinks,
+        { href: "/admin/redirects", label: "Redirects", icon: Signpost },
+        { href: "/admin/system-health", label: "System Health", icon: Activity },
+        { href: "/admin/logs", label: "Logs", icon: ScrollText },
         { href: "/admin/audit", label: "Audit", icon: ClipboardList },
         { href: "/admin/backup", label: "Backup", icon: DatabaseBackup },
       ]

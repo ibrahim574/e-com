@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { getProductPrice, type Currency } from "@/lib/currency";
 import { QuickAddButton } from "./quick-add-button";
+import { CompareButton } from "@/components/compare/compare-button";
 
 type ProductCardProps = {
   product: {
@@ -58,6 +59,9 @@ export function ProductCard({ product, currency }: ProductCardProps) {
               Save {formatPrice(savings, currency)}
             </span>
           )}
+        </div>
+        <div className="absolute right-3 top-3">
+          <CompareButton productId={product.id} />
         </div>
       </div>
 

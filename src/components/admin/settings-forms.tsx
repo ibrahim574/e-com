@@ -78,6 +78,7 @@ const TABS = [
   { id: "invoice", label: "Invoice" },
   { id: "smtp", label: "SMTP" },
   { id: "quote", label: "Quote Notifications" },
+  { id: "whatsapp", label: "WhatsApp" },
   { id: "attributes", label: "Attributes" },
   { id: "session", label: "Security" },
 ] as const;
@@ -313,6 +314,100 @@ export function SettingsForms({
               restart the app container.
             </p>
           )}
+
+          <form action={handleSettings} className="mt-8 border-t border-slate-200 pt-6 dark:border-slate-700">
+            <input type="hidden" name="section" value="offline-payments" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+              Offline Payment Methods
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Let customers place orders without paying online. Orders stay
+              PENDING until you mark them PAID in the admin.
+            </p>
+
+            <div className="mt-5 space-y-5">
+              <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <input
+                    type="checkbox"
+                    name="cashOnPickupEnabled"
+                    defaultChecked={settings.cashOnPickupEnabled}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  Enable Cash on Pickup
+                </label>
+                <div className="mt-3">
+                  <Label htmlFor="cashPickupInstructions">Pickup instructions</Label>
+                  <textarea
+                    id="cashPickupInstructions"
+                    name="cashPickupInstructions"
+                    rows={3}
+                    defaultValue={settings.cashPickupInstructions ?? ""}
+                    placeholder="Visit our store at … during business hours and pay in cash."
+                    className="mt-1 w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  <input
+                    type="checkbox"
+                    name="interacEnabled"
+                    defaultChecked={settings.interacEnabled}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  Enable Interac e-Transfer
+                </label>
+                <div className="mt-3">
+                  <Label htmlFor="interacEmail">Interac e-Transfer email</Label>
+                  <Input
+                    id="interacEmail"
+                    name="interacEmail"
+                    type="email"
+                    defaultValue={settings.interacEmail ?? ""}
+                    placeholder="payments@yourstore.com"
+                  />
+                </div>
+                <div className="mt-3">
+                  <Label htmlFor="interacInstructions">Interac instructions</Label>
+                  <textarea
+                    id="interacInstructions"
+                    name="interacInstructions"
+                    rows={3}
+                    defaultValue={settings.interacInstructions ?? ""}
+                    placeholder="Send your e-Transfer with the order number as the message…"
+                    className="mt-1 w-full rounded-md border border-slate-300 p-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                Fraud detection
+              </h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                Orders at or above this total are automatically flagged for
+                review.
+              </p>
+              <div className="mt-3 max-w-xs">
+                <Label htmlFor="fraudHighValue">High-value threshold ($)</Label>
+                <Input
+                  id="fraudHighValue"
+                  name="fraudHighValue"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  defaultValue={(settings.fraudHighValueCents / 100).toFixed(2)}
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <Button type="submit">Save payment methods</Button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -750,6 +845,56 @@ export function SettingsForms({
               placeholder="abu@wirelesscom.ca, service@wirelesscom.ca"
             />
             <p className="mt-1 text-xs text-slate-500">Comma-separated email addresses.</p>
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button type="submit">Save</Button>
+          </div>
+        </form>
+      )}
+
+      {tab === "whatsapp" && (
+        <form
+          action={handleSettings}
+          className="max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <input type="hidden" name="section" value="whatsapp" />
+          <h2 className="text-lg font-bold text-slate-900">WhatsApp Chat</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Shows a floating chat button on the storefront. Messages open in
+            WhatsApp and are delivered to your WhatsApp Business number.
+          </p>
+          <label className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <input
+              type="checkbox"
+              name="whatsappEnabled"
+              defaultChecked={settings.whatsappEnabled}
+              className="h-4 w-4 rounded border-slate-300"
+            />
+            Enable WhatsApp chat widget
+          </label>
+          <div className="mt-4">
+            <Label htmlFor="whatsappNumber">WhatsApp Business number</Label>
+            <Input
+              id="whatsappNumber"
+              name="whatsappNumber"
+              defaultValue={settings.whatsappNumber ?? ""}
+              placeholder="14165551234 (country code, no symbols)"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Include the country code. Digits only — e.g. 1 416 555 1234.
+            </p>
+          </div>
+          <div className="mt-4">
+            <Label htmlFor="whatsappGreeting">Default greeting message</Label>
+            <Input
+              id="whatsappGreeting"
+              name="whatsappGreeting"
+              defaultValue={settings.whatsappGreeting ?? ""}
+              placeholder="Hi! I have a question about your radios."
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Pre-filled into the visitor&apos;s message.
+            </p>
           </div>
           <div className="mt-6 flex justify-end">
             <Button type="submit">Save</Button>

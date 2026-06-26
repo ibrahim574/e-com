@@ -2,21 +2,36 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { getOrCreateCart } from "@/lib/cart";
+import { getCurrency } from "@/lib/currency-server";
+import { getProductPrice, getVariantPrice } from "@/lib/currency";
+import { evaluateCoupon, normalizeCouponCode } from "@/lib/coupons";
+import type { CouponLineItem } from "@/lib/coupons";
 
+const OPEN_STOCK_LIMIT = 99;
+
+/**
+ * Effective max quantity a customer may add. Products flagged for pre-order or
+ * backorder can be purchased past their on-hand stock.
+ */
 async function getStockLimit(productId: string, variantId: string | null) {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { stock: true, allowPreorder: true, allowBackorder: true },
+  });
+  const openOrder = Boolean(product?.allowPreorder || product?.allowBackorder);
+
   if (variantId) {
     const variant = await prisma.productVariant.findUnique({
       where: { id: variantId },
       select: { stock: true },
     });
+    if (openOrder) return OPEN_STOCK_LIMIT;
     return variant?.stock ?? 0;
   }
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { stock: true },
-  });
+  if (openOrder) return OPEN_STOCK_LIMIT;
   return product?.stock ?? 0;
 }
 
@@ -112,4 +127,57 @@ export async function removeCartItemAction(formData: FormData) {
   await prisma.cartItem.delete({ where: { id: itemId } });
   revalidatePath("/cart");
   revalidatePath("/", "layout");
+}
+
+export async function applyCouponAction(formData: FormData) {
+  const code = normalizeCouponCode(String(formData.get("code") ?? ""));
+  if (!code) return { error: "Enter a coupon code." };
+
+  const [cart, currency, session] = await Promise.all([
+    getOrCreateCart(),
+    getCurrency(),
+    auth(),
+  ]);
+
+  if (!cart.items.length) return { error: "Your cart is empty." };
+
+  let subtotalCents = 0;
+  const items: CouponLineItem[] = cart.items.map((item) => {
+    const pricing = item.variant
+      ? getVariantPrice(item.variant, item.product, currency)
+      : getProductPrice(item.product, currency);
+    subtotalCents += pricing.currentCents * item.quantity;
+    return {
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPriceCents: pricing.currentCents,
+    };
+  });
+
+  const res = await evaluateCoupon(code, {
+    subtotalCents,
+    shippingCents: 0,
+    userId: session?.user?.id ?? null,
+    email: session?.user?.email ?? null,
+    items,
+  });
+  if ("error" in res) return { error: res.error };
+
+  await prisma.cart.update({
+    where: { id: cart.id },
+    data: { couponCode: code },
+  });
+
+  revalidatePath("/cart");
+  return { success: true, message: `Coupon applied — ${res.discount.label}.` };
+}
+
+export async function removeCouponAction() {
+  const cart = await getOrCreateCart();
+  await prisma.cart.update({
+    where: { id: cart.id },
+    data: { couponCode: null },
+  });
+  revalidatePath("/cart");
+  return { success: true };
 }

@@ -194,6 +194,79 @@ export async function updateSiteSettingsAction(formData: FormData) {
       entityId: "singleton",
       summary: `Branding: ${changes.join(", ")}`,
     });
+  } else if (section === "whatsapp") {
+    const whatsappEnabled = formData.get("whatsappEnabled") === "on";
+    const rawNumber = String(formData.get("whatsappNumber") ?? "").trim();
+    // keep only digits for the wa.me link; store null when empty
+    const whatsappNumber = rawNumber.replace(/[^\d]/g, "") || null;
+    const whatsappGreeting =
+      sanitizeText(String(formData.get("whatsappGreeting") ?? ""), 300) || null;
+
+    if (whatsappEnabled && !whatsappNumber) {
+      return { error: "Enter your WhatsApp Business number to enable chat." };
+    }
+
+    await prisma.siteSettings.upsert({
+      where: { id: "singleton" },
+      update: { whatsappEnabled, whatsappNumber, whatsappGreeting },
+      create: {
+        id: "singleton",
+        whatsappEnabled,
+        whatsappNumber,
+        whatsappGreeting,
+      },
+    });
+    await recordAudit({
+      actor,
+      action: "SETTING",
+      entityType: "SiteSettings",
+      entityId: "singleton",
+      summary: `WhatsApp chat ${whatsappEnabled ? "enabled" : "disabled"}`,
+    });
+  } else if (section === "offline-payments") {
+    const cashOnPickupEnabled = formData.get("cashOnPickupEnabled") === "on";
+    const cashPickupInstructions =
+      sanitizeText(String(formData.get("cashPickupInstructions") ?? ""), 1000) || null;
+    const interacEnabled = formData.get("interacEnabled") === "on";
+    const interacEmail =
+      sanitizeText(String(formData.get("interacEmail") ?? ""), 200) || null;
+    const interacInstructions =
+      sanitizeText(String(formData.get("interacInstructions") ?? ""), 1000) || null;
+    const fraudHighValueRaw = Number(formData.get("fraudHighValue") ?? 0);
+    const fraudHighValueCents =
+      fraudHighValueRaw > 0 ? Math.round(fraudHighValueRaw * 100) : 150000;
+
+    if (interacEnabled && !interacEmail) {
+      return { error: "Enter the Interac e-Transfer email to enable it." };
+    }
+
+    await prisma.siteSettings.upsert({
+      where: { id: "singleton" },
+      update: {
+        cashOnPickupEnabled,
+        cashPickupInstructions,
+        interacEnabled,
+        interacEmail,
+        interacInstructions,
+        fraudHighValueCents,
+      },
+      create: {
+        id: "singleton",
+        cashOnPickupEnabled,
+        cashPickupInstructions,
+        interacEnabled,
+        interacEmail,
+        interacInstructions,
+        fraudHighValueCents,
+      },
+    });
+    await recordAudit({
+      actor,
+      action: "SETTING",
+      entityType: "SiteSettings",
+      entityId: "singleton",
+      summary: "Offline payment methods updated",
+    });
   } else if (section === "general") {
     const announcementText = sanitizeText(
       String(formData.get("announcementText") ?? ""),

@@ -1,5 +1,13 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { PARENT_COMPANY, PARENT_COMPANY_URL, SITE_DOMAIN, SITE_NAME } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description: `Learn about ${SITE_NAME} and our professional two-way radio and communication solutions.`,
+  alternates: { canonical: "/about" },
+  openGraph: { type: "website", title: "About Us", url: "/about" },
+};
 
 export default function AboutPage() {
   return (

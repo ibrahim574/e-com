@@ -15,6 +15,9 @@ import { formatPrice } from "@/lib/utils";
 import { EMAIL_BRAND_NAME } from "@/lib/constants";
 import { getRequestIp } from "@/lib/request-ip";
 import { onOrderPaid, onOrderPaidInTransaction } from "@/lib/accounting/on-order-paid";
+import { redeemCouponForOrder } from "@/lib/coupons";
+import { writeSystemLog } from "@/lib/system-log";
+import { flagOrderIfSuspicious } from "@/lib/fraud";
 import { createOrRegenerateInvoice } from "@/lib/invoice/invoice-service";
 import { getVariantLabel } from "@/lib/cart";
 import { getProductPrice, getVariantPrice } from "@/lib/currency";
@@ -282,9 +285,58 @@ export async function updateOrderAction(formData: FormData) {
 
   if (before.status !== "PAID" && status === "PAID") {
     await prisma.$transaction(async (tx) => {
+      // PayPal orders decrement stock at capture; offline/manual orders are
+      // only decremented now, when an admin marks them PAID.
+      if (!after.paypalCaptureId) {
+        for (const item of after.items) {
+          if (item.variantId) {
+            await tx.productVariant.update({
+              where: { id: item.variantId },
+              data: { stock: { decrement: item.quantity } },
+            });
+          } else {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { decrement: item.quantity } },
+            });
+          }
+        }
+      }
+      await redeemCouponForOrder(tx, {
+        id: after.id,
+        couponCode: after.couponCode,
+        adjustmentCents: after.adjustmentCents,
+        userId: after.userId,
+        guestEmail: after.guestEmail,
+      });
       await onOrderPaidInTransaction(tx, orderId, after.paypalCaptureId);
     });
     await onOrderPaid(orderId);
+    const ip = await getRequestIp();
+    await writeSystemLog({
+      category: "PAYMENT",
+      level: "info",
+      message: `Order ${after.orderNumber} marked PAID by admin`,
+      metadata: { orderId, totalCents: after.totalCents },
+      ip,
+      userId: after.userId,
+    });
+    await flagOrderIfSuspicious(
+      {
+        id: after.id,
+        orderNumber: after.orderNumber,
+        totalCents: after.totalCents,
+        userId: after.userId,
+        guestEmail: after.guestEmail,
+        shippingPostal: after.shippingPostal,
+        shippingCountry: after.shippingCountry,
+        shippingCity: after.shippingCity,
+        billingPostal: after.billingPostal,
+        billingCountry: after.billingCountry,
+        billingCity: after.billingCity,
+      },
+      ip,
+    );
   } else if (before.status === "PAID") {
     const financialsChanged =
       before.subtotalCents !== after.subtotalCents ||

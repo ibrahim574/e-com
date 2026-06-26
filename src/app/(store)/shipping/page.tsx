@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import { getFreeShippingMessage } from "@/lib/shipping";
+
+export const metadata: Metadata = {
+  title: "Shipping Policy",
+  description:
+    "Shipping information, processing times, and delivery details for orders across Canada and the United States.",
+  alternates: { canonical: "/shipping" },
+  openGraph: { type: "website", title: "Shipping Policy", url: "/shipping" },
+};
 
 export default async function ShippingPage() {
   const freeShippingMessage = await getFreeShippingMessage();

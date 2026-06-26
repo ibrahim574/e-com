@@ -93,6 +93,29 @@ export async function updateCustomerEmailAction(formData: FormData) {
   return { success: true };
 }
 
+export async function deleteCustomerAction(id: string) {
+  const actor = await getSuperActorOrThrow();
+  const customer = await loadCustomer(id);
+  if (!customer) return { error: "Customer not found." };
+
+  // Orders are preserved (Order.userId ON DELETE SET NULL); the cart and
+  // password-reset tokens cascade away with the user.
+  await prisma.user.delete({ where: { id } });
+
+  await recordAudit({
+    actor,
+    action: "DELETE",
+    entityType: "Customer",
+    entityId: id,
+    summary: `Deleted customer ${customer.email}`,
+    ipAddress: await getRequestIp(),
+    previousValue: { email: customer.email, name: customer.name },
+  });
+
+  revalidatePath("/admin/customers");
+  return { success: true };
+}
+
 export async function resetCustomerPasswordAction(formData: FormData) {
   const actor = await getSuperActorOrThrow();
   const id = String(formData.get("id") ?? "");

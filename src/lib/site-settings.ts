@@ -21,6 +21,15 @@ export type SiteSettings = {
   proudlyCanadianEnabled: boolean;
   siteLogoUrl: string | null;
   siteFaviconUrl: string | null;
+  whatsappEnabled: boolean;
+  whatsappNumber: string | null;
+  whatsappGreeting: string | null;
+  cashOnPickupEnabled: boolean;
+  cashPickupInstructions: string | null;
+  interacEnabled: boolean;
+  interacEmail: string | null;
+  interacInstructions: string | null;
+  fraudHighValueCents: number;
   updatedAt: Date;
 };
 

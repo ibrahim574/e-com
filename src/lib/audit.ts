@@ -36,7 +36,12 @@ export type AuditEntityType =
   | "Invoice"
   | "TaxRule"
   | "PaymentRecord"
-  | "Backup";
+  | "Backup"
+  | "Redirect"
+  | "Coupon"
+  | "ComparisonAttribute"
+  | "PurchaseRequest"
+  | "Customer";
 
 export type RecordAuditInput = {
   actor?: AuditActor | null;

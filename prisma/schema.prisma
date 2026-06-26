@@ -72,6 +72,23 @@ enum QuoteSubmissionType {
   STAY_CONNECTED
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+  BUY_X_GET_Y
+}
+
+enum SystemLogCategory {
+  ERROR
+  PAYMENT
+  EMAIL
+  SMS
+  API
+  LOGIN
+  SECURITY
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -166,6 +183,9 @@ model Product {
   saleUsdCents         Int?
   hasVariants          Boolean       @default(false)
   stock                Int           @default(0)
+  allowPreorder        Boolean       @default(false)
+  preorderReleaseDate  DateTime?
+  allowBackorder       Boolean       @default(false)
   purchaseCostCents    Int?
   lowStockThreshold    Int           @default(5)
   seriesId             String?
@@ -198,6 +218,7 @@ model Product {
   compatibleFrom      CompatibleProduct[]    @relation("ProductCompatibleFrom")
   compatibleTo        CompatibleProduct[]    @relation("ProductCompatibleTo")
   inventoryMovements  InventoryMovement[]
+  purchaseRequests    PurchaseRequest[]
   shippingClass       ShippingClass?         @relation(fields: [shippingClassId], references: [id], onDelete: SetNull)
   heroFeatured        HeroFeaturedProduct?
 }
@@ -325,11 +346,12 @@ model ProductIndustry {
 }
 
 model Cart {
-  id        String   @id @default(cuid())
-  userId    String?  @unique
-  guestId   String?  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String?  @unique
+  guestId    String?  @unique
+  couponCode String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]
@@ -366,6 +388,9 @@ model Order {
   taxLabel        String?
   taxRatePercent  Float?
   adjustmentCents Int         @default(0)
+  couponCode      String?
+  flagged         Boolean     @default(false)
+  fraudReasons    Json?
   shippingOverride Boolean    @default(false)
   taxOverride     Boolean     @default(false)
   totalCents      Int
@@ -492,6 +517,15 @@ model SiteSettings {
   proudlyCanadianEnabled Boolean @default(true)
   siteLogoUrl           String?
   siteFaviconUrl        String?
+  whatsappEnabled       Boolean  @default(false)
+  whatsappNumber        String?
+  whatsappGreeting      String?
+  cashOnPickupEnabled    Boolean @default(false)
+  cashPickupInstructions String?
+  interacEnabled         Boolean @default(false)
+  interacEmail           String?
+  interacInstructions    String?
+  fraudHighValueCents    Int      @default(150000)
   updatedAt             DateTime @updatedAt
 }
 
@@ -752,4 +786,107 @@ model PendingRegistration {
   lastSentAt   DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// ── Coupons ────────────────────────────────────────────────────────────────
+model Coupon {
+  id               String     @id @default(cuid())
+  code             String     @unique
+  description      String?
+  type             CouponType
+  value            Int        @default(0)
+  minSubtotalCents Int        @default(0)
+  maxRedemptions   Int?
+  usedCount        Int        @default(0)
+  perCustomerLimit Int?
+  firstOrderOnly   Boolean    @default(false)
+  allowedEmails    String[]   @default([])
+  buyQty           Int?
+  getQty           Int?
+  productIds       String[]   @default([])
+  startsAt         DateTime?
+  expiresAt        DateTime?
+  enabled          Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  redemptions CouponRedemption[]
+
+  @@index([enabled])
+}
+
+model CouponRedemption {
+  id          String   @id @default(cuid())
+  couponId    String
+  orderId     String   @unique
+  userId      String?
+  email       String?
+  amountCents Int
+  createdAt   DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+}
+
+// ── Unified system logs ────────────────────────────────────────────────────
+model SystemLog {
+  id        String            @id @default(cuid())
+  category  SystemLogCategory
+  level     String            @default("info") // info | warn | error
+  message   String            @db.Text
+  metadata  Json?
+  ip        String?
+  userId    String?
+  createdAt DateTime          @default(now())
+
+  @@index([category])
+  @@index([createdAt])
+}
+
+// ── Purchase requests (out-of-stock interest) ──────────────────────────────
+model PurchaseRequest {
+  id          String   @id @default(cuid())
+  productId   String?
+  productName String
+  name        String
+  email       String
+  phone       String?
+  quantity    Int      @default(1)
+  message     String?  @db.Text
+  status      String   @default("OPEN") // OPEN | CONTACTED | CLOSED
+  createdAt   DateTime @default(now())
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ── Product comparison attributes ──────────────────────────────────────────
+model ComparisonAttribute {
+  id        String   @id @default(cuid())
+  label     String
+  source    String   @default("spec") // "field" | "spec"
+  key       String
+  position  Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+}
+
+// ── SEO: admin-managed redirects ──────────────────────────────────────────
+model Redirect {
+  id          String   @id @default(cuid())
+  source      String   @unique
+  destination String
+  statusCode  Int      @default(308)
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([enabled])
 }

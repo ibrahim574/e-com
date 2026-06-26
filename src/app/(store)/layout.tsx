@@ -1,6 +1,9 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { WhatsAppWidget } from "@/components/layout/whatsapp-widget";
 import { ToastProvider } from "@/components/ui/toast-provider";
+import { CompareProvider } from "@/components/compare/compare-context";
+import { CompareBar } from "@/components/compare/compare-bar";
 import { auth } from "@/lib/auth";
 import { getCart } from "@/lib/cart";
 import { getCurrency } from "@/lib/currency-server";
@@ -41,24 +44,33 @@ export default async function StoreLayout({
 
   return (
     <ToastProvider>
-      <Header
-        cartCount={cartCount}
-        currency={currency}
-        dualCurrency={settings.dualCurrencyEnabled}
-        categories={categories}
-        industries={industries}
-        announcementText={settings.announcementText}
-        announcementEnabled={settings.announcementEnabled}
-        logoUrl={settings.siteLogoUrl}
-        avatarUrl={currentUser?.avatarUrl}
-        userName={currentUser?.name}
-      />
-      <main className="flex-1">{children}</main>
-      <Footer
-        dualCurrency={settings.dualCurrencyEnabled}
-        proudlyCanadianEnabled={settings.proudlyCanadianEnabled}
-        logoUrl={settings.siteLogoUrl}
-      />
+      <CompareProvider>
+        <Header
+          cartCount={cartCount}
+          currency={currency}
+          dualCurrency={settings.dualCurrencyEnabled}
+          categories={categories}
+          industries={industries}
+          announcementText={settings.announcementText}
+          announcementEnabled={settings.announcementEnabled}
+          logoUrl={settings.siteLogoUrl}
+          avatarUrl={currentUser?.avatarUrl}
+          userName={currentUser?.name}
+        />
+        <main className="flex-1">{children}</main>
+        <Footer
+          dualCurrency={settings.dualCurrencyEnabled}
+          proudlyCanadianEnabled={settings.proudlyCanadianEnabled}
+          logoUrl={settings.siteLogoUrl}
+        />
+        {settings.whatsappEnabled && settings.whatsappNumber && (
+          <WhatsAppWidget
+            number={settings.whatsappNumber}
+            greeting={settings.whatsappGreeting}
+          />
+        )}
+        <CompareBar />
+      </CompareProvider>
     </ToastProvider>
   );
 }

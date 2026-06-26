@@ -2,6 +2,24 @@ import { ProductCard } from "@/components/products/product-card";
 import { prisma } from "@/lib/prisma";
 import { getCurrency } from "@/lib/currency-server";
 import { SearchForm } from "@/components/forms/search-form";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}): Promise<Metadata> {
+  const { q = "" } = await searchParams;
+  const query = q.trim();
+  return {
+    title: query ? `Search: ${query}` : "Search",
+    description: query
+      ? `Search results for "${query}" in our two-way radio catalog.`
+      : "Search our full catalog of professional two-way radios and accessories.",
+    alternates: { canonical: "/search" },
+    robots: { index: false, follow: true },
+  };
+}
 
 export default async function SearchPage({
   searchParams,

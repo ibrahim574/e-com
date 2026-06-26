@@ -12,6 +12,7 @@ export async function recordPaymentPending(
     shippingName: string;
     totalCents: number;
   },
+  method = "PayPal",
 ) {
   const existing = await tx.paymentRecord.findFirst({
     where: { orderId: order.id, status: "PENDING" },
@@ -22,7 +23,7 @@ export async function recordPaymentPending(
     data: {
       orderId: order.id,
       customerName: order.shippingName,
-      method: "PayPal",
+      method,
       amountPaidCents: order.totalCents,
       status: "PENDING",
     },
@@ -39,6 +40,12 @@ export async function onOrderPaidInTransaction(
     include: { items: true },
   });
   if (!order) return;
+
+  const pendingPayment = await tx.paymentRecord.findFirst({
+    where: { orderId },
+    orderBy: { createdAt: "desc" },
+  });
+  const paymentMethod = pendingPayment?.method ?? "PayPal";
 
   await tx.paymentRecord.updateMany({
     where: { orderId, status: "PENDING" },
@@ -64,7 +71,7 @@ export async function onOrderPaidInTransaction(
       taxCollected: order.taxCents,
       discountAmount,
       netRevenue,
-      paymentMethod: "PayPal",
+      paymentMethod,
       transactionId: captureId,
     },
     update: {

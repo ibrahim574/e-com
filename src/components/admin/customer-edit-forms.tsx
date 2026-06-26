@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import {
   updateCustomerDetailsAction,
   updateCustomerEmailAction,
   resetCustomerPasswordAction,
+  deleteCustomerAction,
 } from "@/app/actions/admin-customers";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { ActionForm } from "@/components/ui/action-form";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ConfirmButton, ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast-provider";
 
 type CustomerEditData = {
@@ -97,8 +100,60 @@ export function CustomerEditForms({
         <>
           <EmailForm customerId={customer.id} currentEmail={customer.email} showToast={showToast} />
           <PasswordForm customerId={customer.id} showToast={showToast} />
+          <DangerZone
+            customerId={customer.id}
+            customerEmail={customer.email}
+            showToast={showToast}
+          />
         </>
       )}
+    </div>
+  );
+}
+
+function DangerZone({
+  customerId,
+  customerEmail,
+  showToast,
+}: {
+  customerId: string;
+  customerEmail: string;
+  showToast: (m: string, t?: "success" | "error") => void;
+}) {
+  const router = useRouter();
+
+  async function handleDelete() {
+    const result = await deleteCustomerAction(customerId);
+    if (result?.error) {
+      showToast(result.error, "error");
+      return;
+    }
+    showToast("Customer deleted.");
+    router.push("/admin/customers");
+    router.refresh();
+  }
+
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50/50 p-6 md:col-span-2 dark:border-red-900/50 dark:bg-red-950/20">
+      <h2 className="text-base font-bold text-red-700 dark:text-red-400">
+        Delete customer
+      </h2>
+      <p className="mt-1 text-xs text-red-600/80 dark:text-red-400/80">
+        Permanently removes this customer account and their cart. Past orders are
+        kept for your records but no longer linked to a profile. Super admin only.
+      </p>
+      <div className="mt-4 flex justify-end">
+        <ConfirmButton
+          message={`Permanently delete ${customerEmail}? This cannot be undone.`}
+          title="Delete customer"
+          confirmLabel="Delete customer"
+          onConfirm={handleDelete}
+          className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete customer
+        </ConfirmButton>
+      </div>
     </div>
   );
 }

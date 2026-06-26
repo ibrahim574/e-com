@@ -3,6 +3,7 @@ import { EMAIL_BRAND_NAME, SITE_EMAIL } from "./constants";
 import { getSiteSettings } from "./site-settings";
 import { decryptSecret } from "./crypto";
 import { redactForLog } from "./sanitize";
+import { writeSystemLog } from "./system-log";
 
 let cachedTransporter: Transporter | null = null;
 let cachedConfigKey: string | null = null;
@@ -106,14 +107,35 @@ export async function sendEmail({
     return false;
   }
 
-  await transporter.sendMail({
-    from: await fromAddress(),
-    to,
-    subject,
-    text,
-    html,
-  });
-  return true;
+  const recipient = Array.isArray(to) ? to.join(", ") : to;
+  try {
+    await transporter.sendMail({
+      from: await fromAddress(),
+      to,
+      subject,
+      text,
+      html,
+    });
+    await writeSystemLog({
+      category: "EMAIL",
+      level: "info",
+      message: `Email sent: ${subject}`,
+      metadata: { to: recipient, subject },
+    });
+    return true;
+  } catch (err) {
+    await writeSystemLog({
+      category: "EMAIL",
+      level: "error",
+      message: `Email send failed: ${subject}`,
+      metadata: {
+        to: recipient,
+        subject,
+        error: err instanceof Error ? err.message : "unknown",
+      },
+    });
+    throw err;
+  }
 }
 
 type SendEmailWithAttachmentInput = SendEmailInput & {

@@ -152,6 +152,14 @@ export async function saveProductAction(formData: FormData) {
   const allowCustomFrequency = formData.get("allowCustomFrequency") === "on";
   const customTxRequired = formData.get("customTxRequired") === "on";
   const customRxRequired = formData.get("customRxRequired") === "on";
+  const allowPreorder = formData.get("allowPreorder") === "on";
+  const allowBackorder = formData.get("allowBackorder") === "on";
+  const preorderReleaseDateRaw = String(
+    formData.get("preorderReleaseDate") ?? "",
+  ).trim();
+  const preorderReleaseDate = preorderReleaseDateRaw
+    ? new Date(preorderReleaseDateRaw)
+    : null;
   const signalTypeIds = formData.getAll("signalTypeIds").map(String);
   const frequencyBandIds = formData.getAll("frequencyBandIds").map(String);
   const relatedProductIds = formData.getAll("relatedProductIds").map(String);
@@ -185,6 +193,9 @@ export async function saveProductAction(formData: FormData) {
     saleUsdCents,
     hasVariants,
     stock,
+    allowPreorder,
+    allowBackorder,
+    preorderReleaseDate,
     purchaseCostCents,
     lowStockThreshold,
     seriesId,
